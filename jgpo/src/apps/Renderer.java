@@ -77,8 +77,8 @@ class Window extends JPanel {
 	private void doDrawing(Graphics g) {
         Graphics2D g2d = (Graphics2D) g;
 
-//        g2d.setColor(Color.BLACK);
-//        g2d.drawRect(arena.x, arena.y, arena.width, arena.height);
+        g2d.setColor(Color.BLACK);
+        g2d.drawRect(arena.x, arena.y, arena.width, arena.height);
         
         for(int i = 0; i < num_players; i++) {
 	        g2d.setPaint(ship_colors[i]);

@@ -20,7 +20,6 @@ public class GameState {
 		public int heading;	
 	}
 	
-	private int frame_number;
 	private Rectangle bounds;
 	private Ship[] ships;
 	
@@ -28,9 +27,8 @@ public class GameState {
 		ships = new Ship[num_ships];
 		
 		int width, height, radius;
-		frame_number = 0;
 		
-		bounds = new Rectangle(50, 50, 200, 200);
+		bounds = new Rectangle(50, 50, 515, 330);
 		// left - right
 		width = (bounds.width + bounds.x) - bounds.x;
 		// top - bottom
@@ -62,6 +60,5 @@ public class GameState {
 	}
 
 	public void update() {
-		
 	}
 }
