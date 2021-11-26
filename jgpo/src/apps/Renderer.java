@@ -42,7 +42,7 @@ class Window extends JPanel {
 		Color.BLUE,
 		Color.PINK
 	};
-	private final int offset = 64;
+	
 	private final Point2D.Double[] shape = { 
 		new Point2D.Double(GameStateConstants.SHIP_RADIUS, 0),
 		new Point2D.Double(-GameStateConstants.SHIP_RADIUS, GameStateConstants.SHIP_WIDTH),
@@ -51,28 +51,43 @@ class Window extends JPanel {
 		new Point2D.Double(GameStateConstants.SHIP_RADIUS, 0), 
     };
 	
+	Rectangle[] bullets;
+	
 	public Window(int num_players, Rectangle arena) {
 		this.num_players = num_players;
 		this.arena = arena;
+		bullets = new Rectangle[GameStateConstants.MAX_BULLETS];
+		for(int i = 0; i < bullets.length; i++) {
+			bullets[i] = new Rectangle();
+		}
 	}
 	
 	public void update(GameState gs, NonGameState ngs) {
 		for(GameState.Ship ship : gs.getShips()) {
 			double cost, sint, theta;
 			double newX, newY;
-		
+			
 			theta = (double)ship.heading * GameStateConstants.PI / 180;
 			cost = Math.cos(theta);
 			sint = Math.sin(theta);
 			
 			for(int i = 0; i < shape.length; i++) {
 				newX = shape[i].x * cost - shape[i].y * sint;
-				newY = shape[i].x * sint + shape[i].y * cost;
+		        newY = shape[i].x * sint + shape[i].y * cost;
 				shape[i].x = newX + ship.position.x;
 				shape[i].y = newY + ship.position.y;
 			}
-		}
-	} 
+			
+			for(int i = 0; i < GameStateConstants.MAX_BULLETS; i++) {
+				if(ship.bullets[i] != null && ship.bullets[i].active) {
+					bullets[i].x = (int)ship.bullets[i].position.x;
+					bullets[i].y = (int)ship.bullets[i].position.y; 
+					bullets[i].width = 4; 
+					bullets[i].height = 4;
+				}
+			}
+		}	
+	}
 	
 	private void doDrawing(Graphics g) {
         Graphics2D g2d = (Graphics2D) g;
@@ -96,14 +111,23 @@ class Window extends JPanel {
 	
 	        GeneralPath ship = new GeneralPath();
 	
-	        ship.moveTo(shape[0].x + offset, shape[0].y + offset);
+	        ship.moveTo(shape[0].x, shape[0].y);
 	
-	        for (int k = 1; k < shape.length; k++)
-	            ship.lineTo(shape[k].x + offset, shape[k].y + offset);
+	        for (int k = 1; k < shape.length; k++) {
+	            ship.lineTo(shape[k].x, shape[k].y);
+	        }
 	
-	        ship.closePath();
+	        ship.closePath();	        
 	        g2d.draw(ship);
         }
+        
+    	g2d.setColor(Color.YELLOW);
+    	for(int i = 0; i < bullets.length; i++) {
+    		g2d.drawRect(bullets[i].x, 		bullets[i].y, 
+    					 bullets[i].width, 	bullets[i].height);
+    	}
+        
+        
         g2d.dispose();
    } 
 
