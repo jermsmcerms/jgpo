@@ -4,7 +4,6 @@ import java.awt.EventQueue;
 
 public class VectorWar {
 	private GameState gs;
-	private NonGameState ngs;
 	private Renderer renderer;
 	
 	public enum VectorWarInputs {
@@ -25,7 +24,6 @@ public class VectorWar {
 	
 	public VectorWar(int num_players) {
 		gs = new GameState(num_players);
-		ngs = new NonGameState();
 		
 		EventQueue.invokeLater(new Runnable() {
 			@Override
@@ -42,14 +40,10 @@ public class VectorWar {
 	}
 
 	private void drawCurrentFrame() {
-		if(gs != null && ngs != null && renderer != null) {
-			renderer.update(gs, ngs);
-		}
+		
 	}
 
 	private void advanceFrame(int inputs[], int disconnect_flags) {
-		if(gs != null) {
-			gs.update(inputs, disconnect_flags);
-		}
+		
 	}
 }
