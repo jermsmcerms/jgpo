@@ -26,24 +26,17 @@ public class VectorWar {
 		gs = new GameState(num_players);
 		
 		EventQueue.invokeLater(new Runnable() {
-			@Override
+			@Override 
 			public void run() {
-				renderer = new Renderer(num_players, gs.getBounds());
+				renderer = new Renderer(num_players, gs);
 				renderer.setVisible(true);
 			}
 		});
 	}
 
 	public void runFrame() {
-		advanceFrame(new int[] {4,1}, 0);
-		drawCurrentFrame();
-	}
-
-	private void drawCurrentFrame() {
-		
-	}
-
-	private void advanceFrame(int inputs[], int disconnect_flags) {
-		
+//		if(renderer != null) {
+//			renderer.update(gs);
+//		}
 	}
 }
