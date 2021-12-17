@@ -1,25 +1,12 @@
 package apps;
 
-import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
-public class Main extends JFrame {
-	private static final long serialVersionUID = -1183229478321125258L;
+public class Main {
 	private static final int MAX_PLAYERS = 4;
-	private final VectorWar vector_war;
 	
 	public Main(int num_players) {
-		vector_war = new VectorWar(num_players);
-		long now = System.currentTimeMillis();
-		long next = now;
-		
-		while(true) {
-			now = System.currentTimeMillis();
-			if(now >= next) {
-				vector_war.runFrame();
-				next = now + (1000 / 60);
-			}
-		}
+		new VectorWar(num_players);
     }
 
     public static void main(String[] args) {

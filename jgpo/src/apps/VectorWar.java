@@ -2,9 +2,11 @@ package apps;
 
 import java.awt.EventQueue;
 
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
+
 public class VectorWar {
 	private GameState gs;
-	private Renderer renderer;
 	
 	public enum VectorWarInputs {
 		INPUT_THRUST		(1<<0),
@@ -28,15 +30,13 @@ public class VectorWar {
 		EventQueue.invokeLater(new Runnable() {
 			@Override 
 			public void run() {
-				renderer = new Renderer(num_players, gs);
-				renderer.setVisible(true);
+				try {
+                    UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+                } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {
+                    ex.printStackTrace();
+                }
+				new Renderer(gs);
 			}
 		});
-	}
-
-	public void runFrame() {
-//		if(renderer != null) {
-//			renderer.update(gs);
-//		}
 	}
 }
