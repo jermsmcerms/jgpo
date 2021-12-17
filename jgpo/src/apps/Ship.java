@@ -22,17 +22,23 @@ public class Ship extends AbstractDrawable{
 	public double radius;
 	
 	public Ship() {
-		this(null, null);
+		this(new Polygon(	
+			new int[] {	Constants.SHIP_RADIUS, -Constants.SHIP_RADIUS, 
+						(Constants.SHIP_TUCK - Constants.SHIP_RADIUS), 
+						-Constants.SHIP_RADIUS, Constants.SHIP_RADIUS },
+			
+			new int[] { 0, Constants.SHIP_WIDTH, 
+						0, -Constants.SHIP_WIDTH, 0 }, 5), null);
 	}
 	
 	public Ship(Shape shape) {
-		this(shape, null);
+		this(shape, Color.BLACK);
 	}
 	
 	public Ship(Shape shape, Color color) {
 		super(shape, color);
 	}
-
+	
 	@Override
 	public void draw(Graphics2D g2d) {
 		Polygon ship_shape = (Polygon)shape;

@@ -24,8 +24,8 @@ public class GameState {
 			sint = Math.sin(theta);
 			
 			int r = bounds.height / 4;
-			ships[i].pos.x = bounds.width / 2 + r * cost;
-			ships[i].pos.y = bounds.height / 2 + r * sint;
+			ships[i].pos.x = bounds.x + bounds.width / 2 + r * cost;
+			ships[i].pos.y = bounds.y + bounds.height / 2 + r * sint;
 			ships[i].heading = (heading + 180) % 360;
 			ships[i].radius = Constants.SHIP_RADIUS;
 		}
