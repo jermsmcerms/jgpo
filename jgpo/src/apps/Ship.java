@@ -6,7 +6,7 @@ import java.awt.Polygon;
 import java.awt.Shape;
 import java.awt.geom.GeneralPath;
 
-public class Ship extends AbstractDrawable{
+public class Ship extends AbstractDrawable {
 	public class Position {
 		double x, y;
 	}
@@ -15,20 +15,23 @@ public class Ship extends AbstractDrawable{
 		double dx, dy;
 	}
 	
+	public class Bullet {
+		public boolean active;
+		public Position pos;
+		public Velocity vel;
+	}
+	
 	public Position pos;
 	public Velocity vel;
+	public Bullet bullets[];
 	public int health;
 	public int heading;
 	public double radius;
+	public int cooldown;
+	public int score;
 	
 	public Ship() {
-		this(new Polygon(	
-			new int[] {	Constants.SHIP_RADIUS, -Constants.SHIP_RADIUS, 
-						(Constants.SHIP_TUCK - Constants.SHIP_RADIUS), 
-						-Constants.SHIP_RADIUS, Constants.SHIP_RADIUS },
-			
-			new int[] { 0, Constants.SHIP_WIDTH, 
-						0, -Constants.SHIP_WIDTH, 0 }, 5), null);
+		this(null, null);
 	}
 	
 	public Ship(Shape shape) {
@@ -41,10 +44,17 @@ public class Ship extends AbstractDrawable{
 	
 	@Override
 	public void draw(Graphics2D g2d) {
-		Polygon ship_shape = (Polygon)shape;
-		GeneralPath path = new GeneralPath();
-		path.moveTo(pos.x, pos.y);
+		Polygon ship_shape = new Polygon(	
+			new int[] {	Constants.SHIP_RADIUS, -Constants.SHIP_RADIUS, 
+						(Constants.SHIP_TUCK - Constants.SHIP_RADIUS), 
+						-Constants.SHIP_RADIUS, Constants.SHIP_RADIUS },
+			
+			new int[] { 0, Constants.SHIP_WIDTH, 
+						0, -Constants.SHIP_WIDTH, 0 }, 5);
 		
+		GeneralPath path = new GeneralPath();
+		path.moveTo(ship_shape.xpoints[0], ship_shape.ypoints[0]);
+
 		for (int i = 0; i < ship_shape.npoints; i++) {
 			double cost, sint, theta;
 			int newx, newy;
@@ -54,14 +64,24 @@ public class Ship extends AbstractDrawable{
 			sint = Math.sin(theta);
 			newx = (int)(ship_shape.xpoints[i] * cost - ship_shape.ypoints[i] * sint);
 			newy = (int)(ship_shape.xpoints[i] * sint + ship_shape.ypoints[i] * cost);
+
+			int new_pos_x = (int)(newx + pos.x);
+			int new_pos_y = (int)(newy + pos.y);
 			
-			ship_shape.xpoints[i] = (int)(newx + pos.x);
-			ship_shape.ypoints[i] = (int)(newy + pos.y);
-						
-            path.lineTo(ship_shape.xpoints[i], ship_shape.ypoints[i]);
-        }   
+			ship_shape.xpoints[i] = new_pos_x;
+			ship_shape.ypoints[i] = new_pos_y;
+
+			path.lineTo(ship_shape.xpoints[i], ship_shape.ypoints[i]);
+        }
 		
 		g2d.setColor(color);
 		g2d.draw(ship_shape);
+		
+		g2d.setColor(new Color(64, 0, 128));
+		for(int i = 0; i < Constants.MAX_BULLETS; i++) {
+			if(bullets[i].active) {
+				g2d.drawRect((int)bullets[i].pos.x, (int)bullets[i].pos.y, 2, 2);
+			}
+		}
 	}
 }

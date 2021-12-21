@@ -2,7 +2,7 @@ package apps;
 
 public class Constants {
 	public static final int STARTING_HEALTH		= 100;
-	public static final int ROTATE_INCREMEN		= 3;
+	public static final int ROTATE_INCREMENT	= 3;
 	public static final int SHIP_RADIUS			= 15;
 	public static final int SHIP_WIDTH			= 8;
 	public static final int SHIP_TUCK       	= 3;

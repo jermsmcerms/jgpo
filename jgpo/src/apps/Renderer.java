@@ -1,51 +1,51 @@
 package apps;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.util.ArrayList;
+import java.util.List;
 
-import javax.swing.JFrame;
-import javax.swing.JPanel;
+import javax.swing.JComponent;
 
 @SuppressWarnings("serial")
-public class Renderer extends JFrame {
-	private Window window;
+public class Renderer extends JComponent {
+	private List<Drawable> drawables;
 	
-	public Renderer(GameState gs) {
-		window = new Window(gs);
-		add(window);
-		pack();
-		setResizable(false);
-        setTitle("Vector War");
-        setSize(640, 480);
-        setLocationRelativeTo(null);        
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setVisible(true);
+	public Renderer() {
+		drawables = new ArrayList<>();
 	}
-}
-
-@SuppressWarnings("serial")
-class Window extends JPanel {
-	private final Color[] ship_colors = {
-		Color.GREEN,
-		Color.RED,
-		Color.BLUE,
-		Color.MAGENTA
-	};
-							
-	private final Canvas canvas;
-	private Ship ships[];
 	
-	public Window(GameState gs) {
-		setLayout(new BorderLayout());
-		canvas = new Canvas();
-		add(canvas);
-		
-		canvas.add(new DrawableRectangle(gs.getBounds(), Color.BLACK));
-		
-		ships = gs.getShips();
-		for(int i = 0; i < ships.length; i++) {
-			ships[i].setColor(ship_colors[i]);
-			canvas.add(ships[i]);
+	public Drawable getDrawableAt(int index) {
+		return drawables.get(index);
+	}
+	
+	public void add(Drawable drawable) {
+		drawables.add(drawable);
+		repaint();
+	}
+	
+	public void remove(Drawable drawable) {
+		drawables.remove(drawable);
+		repaint();
+	}
+
+	protected void paintComponent(Graphics g) {
+		super.paintComponent(g);
+		Graphics2D g2d = (Graphics2D)g.create();
+		RenderingHints rh = new RenderingHints(
+    		RenderingHints.KEY_ANTIALIASING,
+    		RenderingHints.VALUE_ANTIALIAS_ON);
+        
+        rh.put(RenderingHints.KEY_RENDERING,
+    		RenderingHints.VALUE_RENDER_QUALITY);
+        
+        g2d.setRenderingHints(rh);
+        
+		for(Drawable d : drawables) {
+			d.draw(g2d);
 		}
+		
+		g2d.dispose();
 	}
 }

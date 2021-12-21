@@ -5,8 +5,11 @@ import java.awt.EventQueue;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
+import api.JgpoNet.JGPOPlayer;
+
 public class VectorWar {
 	private GameState gs;
+	private Frame frame;
 	
 	public enum VectorWarInputs {
 		INPUT_THRUST		(1<<0),
@@ -24,7 +27,7 @@ public class VectorWar {
 		}
 	}
 	
-	public VectorWar(int num_players) {
+	public VectorWar(int num_players, int local_port, JGPOPlayer players[]) {
 		gs = new GameState(num_players);
 		
 		EventQueue.invokeLater(new Runnable() {
@@ -35,8 +38,16 @@ public class VectorWar {
                 } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {
                     ex.printStackTrace();
                 }
-				new Renderer(gs);
+				frame = new Frame(gs);
 			}
 		});
+	}
+
+	public void runFrame() {
+		if(frame != null) {
+			int local_input = frame.getInput();
+			gs.update(new int[] {local_input, 0});
+			frame.update(gs);
+		}
 	}
 }
