@@ -1,4 +1,4 @@
-package apps;
+package app;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -21,6 +21,7 @@ public class Ship extends AbstractDrawable {
 		public Velocity vel;
 	}
 	
+	public String connectState;
 	public Position pos;
 	public Velocity vel;
 	public Bullet bullets[];
@@ -40,10 +41,14 @@ public class Ship extends AbstractDrawable {
 	
 	public Ship(Shape shape, Color color) {
 		super(shape, color);
+		connectState = "default text";
 	}
 	
 	@Override
 	public void draw(Graphics2D g2d) {
+		g2d.setColor(color);
+		
+		g2d.drawString(connectState, (int)pos.x - Constants.SHIP_RADIUS - 10, (int)pos.y + Constants.SHIP_RADIUS + 5);
 		Polygon ship_shape = new Polygon(	
 			new int[] {	Constants.SHIP_RADIUS, -Constants.SHIP_RADIUS, 
 						(Constants.SHIP_TUCK - Constants.SHIP_RADIUS), 

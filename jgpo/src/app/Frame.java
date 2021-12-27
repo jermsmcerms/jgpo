@@ -1,17 +1,19 @@
-package apps;
+package app;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+
+import api.JgpoNet.JGPOPlayerType;
+import app.NonGameState.PlayerConnectionInfo;
 
 @SuppressWarnings("serial")
 public class Frame extends JFrame {
 	private GameWindow gameWindow;
 	private KeyboardInput keyboardInput;
-
-	public Frame(GameState gs) {
+	
+	public Frame(GameState gs) {        
 		gameWindow = new GameWindow(gs);
 		keyboardInput = new KeyboardInput();
 		add(gameWindow);
@@ -25,7 +27,30 @@ public class Frame extends JFrame {
         setVisible(true);
 	}
 	
-	public void update(GameState gs) {
+	public void update(GameState gs, NonGameState ngs) {
+		Ship[] ships = gs.getShips();
+		PlayerConnectionInfo[] players = ngs.players;
+		
+		for(int i = 0; i < ships.length; i++) {
+			switch(players[i].state) {
+				case Connecting :
+					ships[i].connectState = (players[i].type == JGPOPlayerType.JGPO_PLAYERTYPE_LOCAL) ? "Local player: " : "Connecting...";
+					break;
+				case Disconnected :
+					break;
+				case Disconnecting :
+					break;
+				case Running :
+					break;
+				case Synchronizing :
+					break;
+				default :
+					ships[i].connectState = "default text...";
+					break;
+				
+			}
+		}
+		
 		gameWindow.getRenderer().repaint();	
 	}
 	
@@ -35,6 +60,10 @@ public class Frame extends JFrame {
 			input += keyboardInput.getMultiDown()[i] ? (1 << i) : 0;
 		}
 		return input;
+	}
+
+	public void setStatusText(String status) {
+		gameWindow.getRenderer().setStatus(status);
 	}
 }
 

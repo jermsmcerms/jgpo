@@ -1,11 +1,12 @@
-package apps;
+package app;
 
 import java.awt.Rectangle;
 
-import apps.Ship.Bullet;
-import apps.Ship.Position;
+import app.Ship.Bullet;
+import app.Ship.Position;
 
 public class GameState {
+	public int frame_number;
 	private enum Inputs {
 		INPUT_THRUST		(1<<0),
 		INPUT_BREAK			(1<<1),
@@ -65,7 +66,8 @@ public class GameState {
 		return ships;
 	}
 	
-	public void update(int[] inputs) {
+	public void update(int[] inputs, int disconnect_flags) {
+		frame_number++;
 		for(int i = 0; i < inputs.length; i++) {			
 			DataObject data = parseInputs(inputs[i], i);
 			moveShip(i, data);

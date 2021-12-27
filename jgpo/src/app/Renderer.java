@@ -1,5 +1,6 @@
-package apps;
+package app;
 
+import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
@@ -11,6 +12,7 @@ import javax.swing.JComponent;
 @SuppressWarnings("serial")
 public class Renderer extends JComponent {
 	private List<Drawable> drawables;
+	private String status;
 	
 	public Renderer() {
 		drawables = new ArrayList<>();
@@ -46,6 +48,14 @@ public class Renderer extends JComponent {
 			d.draw(g2d);
 		}
 		
+		g2d.setColor(new Color(0,102,0));
+		int status_x = drawables.get(0).getShape().getBounds().width / 2 - 5;
+		int status_y = drawables.get(0).getShape().getBounds().height + 45;
+		g2d.drawString(status, status_x, status_y);
 		g2d.dispose();
+	}
+
+	public void setStatus(String status) {
+		this.status = status;		
 	}
 }

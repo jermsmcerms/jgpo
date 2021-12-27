@@ -1,4 +1,4 @@
-package apps;
+package app;
 
 public class Constants {
 	public static final int STARTING_HEALTH		= 100;
@@ -15,4 +15,5 @@ public class Constants {
 	public static final double SHIP_MAX_THRUST 	= 4.0;
 	public static final double SHIP_BREAK_SPEED	= 0.6;
 	public static final double PI				= 3.1415926;
+	public static final int FRAME_DLAY 			= 2;
 }
