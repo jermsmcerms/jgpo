@@ -1,91 +1,87 @@
 package app;
 
-import api.JgpoNet.JGPOErrorCode;
-import api.JgpoNet.JGPONetworkStats;
-import api.JgpoNet.JGPOPlayer;
+import api.JgpoNet.JGPOErrorCodes;
+import api.NetworkStats;
+import api.Player;
 import api.JgpoNet.JGPOPlayerHandle;
-import api.JgpoNet.JGPOSessionCallbacks;
-import api.JgpoNet.JGPO_API;
-import lib.backend.JGPOSession;
+import api.SessionCallbacks;
+import api.JgpoApi;
 import lib.backend.P2P;
+import lib.backend.SyncTestBackend;
 import lib.utils.GeneralDataPackage;
 
-public class VectorWar_API implements JGPO_API {
-	@Override
-	public GeneralDataPackage jgpo_start_session(JGPOSessionCallbacks cb, String game, int num_players, int local_port) {
-		return new GeneralDataPackage(
-			new P2P(cb, game, local_port, num_players),
-			JGPOErrorCode.JGPO_OK
-		);
+public class VectorWar_API extends JgpoApi {
+	public VectorWar_API(SessionCallbacks callbacks, String name, int numPlayers, int localPort) {
+		super(new P2P(callbacks, name, numPlayers, localPort));
 	}
 	
+	public VectorWar_API(SessionCallbacks sessionCallbacks, String name,
+			int numPlayers) {
+		super(new SyncTestBackend(sessionCallbacks, name, numPlayers));
+	}
+
 	@Override
-	public GeneralDataPackage jgpo_add_player(JGPOSession session, JGPOPlayer player) {
+	public GeneralDataPackage jgpoAddPlayer(Player player) {
 		if(session == null) {
-			return new GeneralDataPackage(JGPOErrorCode.JGPO_INVALID_SESSION);
+			return new GeneralDataPackage(JGPOErrorCodes.JGPO_INVALID_SESSION);
 		}
 		return session.addPlayer(player);
 	}
 
 	@Override
-	public JGPOErrorCode jgpo_start_synctest(JGPOSessionCallbacks cb, String game, int num_players, int frames) {
-		return null;
-	}
-
-	@Override
-	public JGPOErrorCode jgpo_set_frame_delay(JGPOPlayerHandle player, int frame_delay) {
+	public JGPOErrorCodes jgpoSetFrameDelay(JGPOPlayerHandle player, int frame_delay) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public JGPOErrorCode jgpo_idle(JGPOSession session, long timeout) {
+	public JGPOErrorCodes jgpoIdle(long timeout) {
 		if(session == null) {
-			return JGPOErrorCode.JGPO_INVALID_SESSION;
+			return JGPOErrorCodes.JGPO_INVALID_SESSION;
 		}
 		return session.doPoll(timeout);
 	}
 
 	@Override
-	public JGPOErrorCode jgpo_add_local_input(JGPOSession session, JGPOPlayerHandle player, Object values) {
+	public JGPOErrorCodes jgpoAddLocalInput(JGPOPlayerHandle player, Object values) {
 		if(session == null) {
-			return JGPOErrorCode.JGPO_INVALID_SESSION;
+			return JGPOErrorCodes.JGPO_INVALID_SESSION;
 		}
-		return JGPOErrorCode.JGPO_OK;
+		return JGPOErrorCodes.JGPO_OK;
 	}
 
 	@Override
-	public GeneralDataPackage jgpo_synchronize_input(JGPOSession session) {
+	public GeneralDataPackage jgpoSynchronizeInputs() {
 		// TODO Auto-generated method stub
-		return new GeneralDataPackage(JGPOErrorCode.JGPO_OK);
+		return new GeneralDataPackage(JGPOErrorCodes.JGPO_OK);
 	}
 
 	@Override
-	public JGPOErrorCode jgpo_disconnect_player(JGPOPlayerHandle player) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public JGPOErrorCode jgpo_advance_frame(JGPOSession session) {
+	public JGPOErrorCodes jgpoDisconnectPlayer(JGPOPlayerHandle player) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public JGPOErrorCode jgpo_get_network_stats(JGPOPlayerHandle player, JGPONetworkStats stats) {
+	public JGPOErrorCodes jgpoAdvanceFrame() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public JGPOErrorCode jgpo_set_disconnect_timeout(JGPOSession session, int timeout) {
+	public JGPOErrorCodes jgpoSetNetworkStats(JGPOPlayerHandle player, NetworkStats stats) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public JGPOErrorCode jgpo_set_disconnect_notify_start(JGPOSession session,int timeout) {
+	public JGPOErrorCodes jgpoSetDisconnectTimeout(int timeout) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public JGPOErrorCodes jgpoSetDisconnectNotifyStart(int timeout) {
 		// TODO Auto-generated method stub
 		return null;
 	}

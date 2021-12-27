@@ -13,9 +13,14 @@ import javax.swing.JComponent;
 public class Renderer extends JComponent {
 	private List<Drawable> drawables;
 	private String status;
+	private RenderingHints rh;
 	
 	public Renderer() {
 		drawables = new ArrayList<>();
+		rh = new RenderingHints(RenderingHints.KEY_ANTIALIASING, 
+			RenderingHints.VALUE_ANTIALIAS_ON);
+	        
+        rh.put(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 	}
 	
 	public Drawable getDrawableAt(int index) {
@@ -34,25 +39,22 @@ public class Renderer extends JComponent {
 
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);
-		Graphics2D g2d = (Graphics2D)g.create();
-		RenderingHints rh = new RenderingHints(
-    		RenderingHints.KEY_ANTIALIASING,
-    		RenderingHints.VALUE_ANTIALIAS_ON);
-        
-        rh.put(RenderingHints.KEY_RENDERING,
-    		RenderingHints.VALUE_RENDER_QUALITY);
-        
+		Graphics2D g2d = (Graphics2D)g.create();        
         g2d.setRenderingHints(rh);
         
 		for(Drawable d : drawables) {
 			d.draw(g2d);
 		}
 		
+		drawStatusText(g2d);
+		g2d.dispose();
+	}
+
+	private void drawStatusText(Graphics2D g2d) {
 		g2d.setColor(new Color(0,102,0));
 		int status_x = drawables.get(0).getShape().getBounds().width / 2 - 5;
 		int status_y = drawables.get(0).getShape().getBounds().height + 45;
 		g2d.drawString(status, status_x, status_y);
-		g2d.dispose();
 	}
 
 	public void setStatus(String status) {

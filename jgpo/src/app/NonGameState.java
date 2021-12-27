@@ -12,26 +12,26 @@ public class NonGameState {
 		public JGPOPlayerType type;
 		public PlayerConnectState state;
 		public JGPOPlayerHandle handle;
-		public int connect_progress;
-		public int disconnect_timeout;
-		public int disconnect_start;
+		public int connectProgress;
+		public int disconnectTimeout;
+		public int disconnectStart;
 	}
 	
 	public static class ChecksumInfo {
-		public int frame_number;
+		public int frameNumber;
 		public int checksum;
 	}
 	
-	public JGPOPlayerHandle local_player_handle;
+	public JGPOPlayerHandle localPlayerHandle;
 	public PlayerConnectionInfo[] players;
 	public ChecksumInfo now;
 	public ChecksumInfo periodic;
 	
-	private int num_players;
+	private int numPlayers;
 	
 	public NonGameState(int num_players) {
-		this.num_players = num_players;
-		local_player_handle = new JGPOPlayerHandle();
+		this.numPlayers = num_players;
+		localPlayerHandle = new JGPOPlayerHandle();
 		players = new PlayerConnectionInfo[num_players];
 		for(int i = 0; i < players.length; i++) {
 			players[i] = new PlayerConnectionInfo();
@@ -42,19 +42,20 @@ public class NonGameState {
 	}
 
 	public void setConnectState(JGPOPlayerHandle handle, PlayerConnectState state) {
-		for(int i = 0; i < num_players; i++) {
+		for(int i = 0; i < numPlayers; i++) {
 			if(players[i].handle.playerHandle == handle.playerHandle) {
-				players[i].connect_progress = 0;
+				players[i].connectProgress = 0;
 				players[i].state = state;
 				break;
 			}
 		}
 	}
+	
 	public void setDisconnectTimeout() {}
 	public void setConnectState(PlayerConnectState state) {}
 	public void updateConnectProgress(int progress) {}
 
 	public int getNumPlayers() {
-		return num_players;
+		return numPlayers;
 	}
 }

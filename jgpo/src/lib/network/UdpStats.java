@@ -5,5 +5,7 @@ public class UdpStats {
 	public int remoteFrameAdvantage;
 	public int localFrameAdvantage;
 	public int sendQueueLength;
-	Udp.Stats udpStats;
+	public int bytesSent;
+	public int packetsSent;
+	public float kbpsSent;
 }

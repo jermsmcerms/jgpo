@@ -3,8 +3,6 @@ package app;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
-import lib.utils.PerformanceMonitor;
-
 public class KeyboardInput implements KeyListener {
 	private static final int NUM_INPUTS = 6;
 	private boolean pressed = false;

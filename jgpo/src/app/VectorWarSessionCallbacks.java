@@ -1,9 +1,9 @@
 package app;
 
-import api.JgpoNet.JGPOSessionCallbacks;
+import api.SessionCallbacks;
 import api.apievents.JGPOEvent;
 
-public class VectorWarSessionCallbacks implements JGPOSessionCallbacks {
+public class VectorWarSessionCallbacks implements SessionCallbacks {
 
 	@Override
 	public boolean beginGame(String name) {

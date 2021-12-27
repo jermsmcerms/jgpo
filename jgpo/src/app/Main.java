@@ -8,7 +8,7 @@ import java.util.stream.Stream;
 import javax.swing.JOptionPane;
 
 import api.JgpoNet;
-import api.JgpoNet.JGPOPlayer;
+import api.Player;
 
 public class Main {
 	private static final int MAX_PLAYERS = 4;
@@ -21,28 +21,27 @@ public class Main {
     	}
     	
     	try {
-    		int local_port = Integer.parseInt(args[offset++]);
-    		int num_players = Integer.parseInt(args[offset++]);
+    		int localPort = Integer.parseInt(args[offset++]);
+    		int numPayers = Integer.parseInt(args[offset++]);
     		
-    		if(num_players < 1 || num_players > MAX_PLAYERS) {
+    		if(numPayers < 1 || numPayers > MAX_PLAYERS) {
     			syntax();
     		}
     		
     		if("spectate".equals(args[offset])) {
     			System.out.println("create spectator");
     		} else {		
-	    		JGPOPlayer players[] = new JGPOPlayer[JgpoNet.JGPO_MAX_SPECTATORS + 
+	    		Player players[] = new Player[JgpoNet.JGPO_MAX_SPECTATORS + 
 	    		                                      JgpoNet.JGPO_MAX_PLAYERS];
 	    		
-	    		for(int i = 0; i < num_players; i++) {
-	    			players[i] = new JGPOPlayer();
+	    		for(int i = 0; i < numPayers; i++) {
+	    			players[i] = new Player();
 	    			players[i].playerNum = i + 1;
 	    			String playerTypeArgument = args[offset++];
 	    			if("local".equals(playerTypeArgument)) {
 	    				players[i].type = JgpoNet.JGPOPlayerType.JGPO_PLAYERTYPE_LOCAL;
 	    				continue;
 	    			}
-	    			
 	    			
 	    			players[i].type = JgpoNet.JGPOPlayerType.JGPO_PLAYERTYPE_REMOTE;
 	    			List<String> splitByColon = Stream.of(playerTypeArgument)
@@ -57,7 +56,7 @@ public class Main {
 	    		}
 	    		
 	    		// TODO: get the spectator stuff here
-	    		vectorWar = new VectorWar(num_players, local_port, players, 0);
+	    		vectorWar = new VectorWar(numPayers, localPort, players, 0);
     		}
     		
     		runMainLoop();
@@ -76,7 +75,7 @@ public class Main {
 			now = System.currentTimeMillis();
 			vectorWar.idle(Math.max(0, next - now - 1));
 			if(now >= next) {
-				vectorWar.runFrame();
+				vectorWar.executeSingleFrame();
 				next = now + (1000 / 60);
 			}
 		}		

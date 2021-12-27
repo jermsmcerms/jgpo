@@ -6,13 +6,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
-import api.JgpoNet.JGPONetworkStats;
+import api.NetworkStats;
 import api.apievents.JGPOEvent;
 import lib.GameInput;
 import lib.PollSink;
 import lib.TimeSync;
 import lib.network.UdpMsg.ConnectStatus;
 import lib.network.messages.*;
+import lib.network.udppeerevents.PeerSynchronizingEvent;
 import lib.network.udppeerevents.UdpPeerEvent;
 import lib.utils.UdpPeerEventFactory;
 
@@ -95,7 +96,9 @@ public class UdpPeer implements PollSink {
 		ConnectStatus[] localConnectStatus) {
 		this.udp = udp;
 		this.queueId = queue;
+		// TODO: Change parameter list to use InetSocketAddress
 		this.peerAddress = new InetSocketAddress(ipAddress, port);
+		
 		this.localConnectStatus = new UdpMsg.ConnectStatus[localConnectStatus.length];
 		System.arraycopy(localConnectStatus, 0, 
 			this.localConnectStatus, 0, localConnectStatus.length);
@@ -103,10 +106,12 @@ public class UdpPeer implements PollSink {
 		for(int i = 0; i < peerConnectStatus.length; i++) {
 			peerConnectStatus[i] = new UdpMsg.ConnectStatus(false, -1);
 		}
+		
 		ooPacket = new OoPacket();
 		// TODO: send latency and oopPercent are set by some environment variable.
 		// I still don't know how this works and running ggpo always gives them
 		// a zero value...
+		
 		do {
 			magicNumber = ThreadLocalRandom.current().nextInt();
 		} while (magicNumber < 1);
@@ -132,6 +137,7 @@ public class UdpPeer implements PollSink {
 	public void onMessage(UdpMsg message) {
 		boolean messageHandled = false;
 		
+		// TODO : Re-factor so I don't have instantiate this everytime I need to process a message
 		MessageDispatcher[] messageDispatchTable = new MessageDispatcher[] {
 			new MessageDispatcher() { public boolean dispatch() { return onInvalid(message); }},
 			new MessageDispatcher() { public boolean dispatch() { return onSyncRequest(message); }},
@@ -199,7 +205,7 @@ public class UdpPeer implements PollSink {
 	
 	private void disconnect() {}
 	
-	private void getNetworkStats(JGPONetworkStats stats) {}
+	private void getNetworkStats(NetworkStats stats) {}
 	
 	private void updateNetworkStats() {}
 	
@@ -211,7 +217,7 @@ public class UdpPeer implements PollSink {
 	
 	private void sendSyncRequest() {
 		random = ThreadLocalRandom.current().nextInt() & 0xFFFF;
-		UdpMsg syncRequest = new UdpMsg(UdpMsgBody.MsgType.SyncRequest);
+		UdpMsg syncRequest = new UdpMsg(UdpMessageBody.MessageType.SyncRequest);
 		SyncRequest message = (SyncRequest)syncRequest.messageBody;
 		message.randomRequest = random;
 		syncRequest.messageBody = message;
@@ -244,7 +250,7 @@ public class UdpPeer implements PollSink {
 			return false;
 		}
 		
-		UdpMsg syncReply = new UdpMsg(UdpMsgBody.MsgType.SyncReply);
+		UdpMsg syncReply = new UdpMsg(UdpMessageBody.MessageType.SyncReply);
 		SyncReply syncReplyBody = (SyncReply) syncReply.messageBody; 
 		SyncRequest syncRequest = (SyncRequest) message.messageBody;
 		
@@ -282,10 +288,11 @@ public class UdpPeer implements PollSink {
 			remoteMagicNumber = message.header.magicNumber;
 		} else {
 			// This is a sync event. GGPO doesnt really do any thing with theses...
-//			JGPOEvent event = JGPOEventFactory.makeUdpEvent(JGPOEvent.JGPOEventCode.JGPO_SYNCHRONIZING_WITH_PEER);
-//			event.total = NUM_SYNC_PACKETS;
-//			event.count = NUM_SYNC_PACKETS - roundTripsRemaining;
-//			queueEvent(event);
+			PeerSynchronizingEvent peerSynchronizingEvent = 
+				(PeerSynchronizingEvent) UdpPeerEventFactory.makeUdpPeerEvent(UdpPeerEvent.EventType.Synchronizing);
+			peerSynchronizingEvent.total = NUM_SYNC_PACKETS;
+			peerSynchronizingEvent.count = NUM_SYNC_PACKETS - roundTripsRemaining;
+			queueEvent(peerSynchronizingEvent);
 			sendSyncRequest();
 		}
 		
@@ -313,11 +320,12 @@ public class UdpPeer implements PollSink {
 		
 		pumpSendQueue();
 		
+		// TODO: There will be more states to manage. Try and find a way to do it without a switch
+		// statement...
 		if(currentState == State.Syncing) {
 			nextInterval = roundTripsRemaining == NUM_SYNC_PACKETS ? 
 				SYNC_FIRST_INTERVAL : SYNC_RETRY_INTERVAL;
 			if(lastSendTime > 0 && lastSendTime + nextInterval < now) {
-//				System.out.println("No luck syncing after " + nextInterval + " re-queueing packet");
 				sendSyncRequest();
 			}
 		}

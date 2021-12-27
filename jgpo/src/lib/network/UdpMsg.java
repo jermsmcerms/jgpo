@@ -13,11 +13,10 @@
  */
 package lib.network;
 
-import java.util.Arrays;
-
-import lib.network.messages.UdpMsgBody;
+import lib.network.messages.UdpMessageBody;
 import lib.utils.UdpMessageBodyFactory;
 
+// TODO: This may be too complicated...
 /**
  * The UdpMsg class constructs and process messages that can be read by a UDP network.
  * The format for every message is as follows:
@@ -52,7 +51,7 @@ import lib.utils.UdpMessageBodyFactory;
 public class UdpMsg {
 	public static final int UDP_MSG_MAX_PLAYERS = 4;
 	public Header header;
-	public UdpMsgBody messageBody;
+	public UdpMessageBody messageBody;
 	public byte[] messageData;
 	
 	public static class ConnectStatus {
@@ -89,7 +88,7 @@ public class UdpMsg {
 		messageBody = UdpMessageBodyFactory.makeUdpMessageBody(message);
 	}
 
-	public UdpMsg(UdpMsgBody.MsgType messageType) {
+	public UdpMsg(UdpMessageBody.MessageType messageType) {
 		header = new Header();
 		header.messageType = (byte) messageType.ordinal();
 		messageBody = UdpMessageBodyFactory.makeUdpMessageBody(messageType);
@@ -101,7 +100,7 @@ public class UdpMsg {
 			int headerSize = header.headerSizeInBytes;
 			int packetSize = headerSize + messageBodySize;
 			messageData = new byte[packetSize];
-			byte[] messageBodyData = messageBody.constructMessage();
+			byte[] messageBodyData = messageBody.constructMessageBody();
 			
 			// Build the header
 			messageData[0] = (byte)((header.magicNumber >> 24) & 0xff);

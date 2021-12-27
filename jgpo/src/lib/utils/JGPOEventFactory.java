@@ -1,9 +1,7 @@
 package lib.utils;
 
 import api.apievents.ApiSynchronizingEvent;
-import api.apievents.ConnectionInterruptedEvent;
-import api.apievents.JGPOEvent;
-import api.apievents.TimeSyncEvent;
+import api.apievents.*;
 
 public class JGPOEventFactory {
 	public static JGPOEvent makeApiEvent(JGPOEvent.JGPOEventCode code) {

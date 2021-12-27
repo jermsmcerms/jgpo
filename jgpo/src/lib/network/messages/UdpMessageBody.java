@@ -1,7 +1,7 @@
 package lib.network.messages;
 
-public abstract class UdpMsgBody {
-	public MsgType msgType;
+public abstract class UdpMessageBody {
+	public MessageType messageType;
 	
 	/** 	
 	 * sizeInBytes is calculated by the sum of the unique primitive data types, each multiplied by
@@ -19,7 +19,7 @@ public abstract class UdpMsgBody {
 	*/ 
 	protected int sizeInBytes;
 	
-	public enum MsgType {
+	public enum MessageType {
 		Invalid, SyncRequest, SyncReply
 	}
 	
@@ -27,5 +27,5 @@ public abstract class UdpMsgBody {
 		return sizeInBytes;
 	}
 	
-	public abstract byte[] constructMessage();
+	public abstract byte[] constructMessageBody();
 }

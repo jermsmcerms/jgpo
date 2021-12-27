@@ -3,7 +3,7 @@ package lib.utils;
 import lib.network.messages.*;
 
 public class UdpMessageBodyFactory {
-	public static UdpMsgBody makeUdpMessageBody(UdpMsgBody.MsgType messageType) {
+	public static UdpMessageBody makeUdpMessageBody(UdpMessageBody.MessageType messageType) {
 		switch (messageType) {
 			case SyncRequest :
 				return new SyncRequest();
@@ -14,7 +14,8 @@ public class UdpMessageBodyFactory {
 		}
 	}
 	
-	public static UdpMsgBody makeUdpMessageBody(byte[] message) {
+	public static UdpMessageBody makeUdpMessageBody(byte[] message) {
+		// TODO: is there a better way to get this value?...
 		byte messageType = message[8];
 		switch (messageType) {
 			case 1 :

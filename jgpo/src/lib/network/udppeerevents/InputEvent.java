@@ -4,9 +4,8 @@ import lib.GameInput;
 
 public class InputEvent extends UdpPeerEvent {
 	public GameInput input;
-	public InputEvent(EventType t) {
-		super(t);
-		// TODO Auto-generated constructor stub
+	public InputEvent(EventType eventType) {
+		super(eventType);
 	}
 
 }

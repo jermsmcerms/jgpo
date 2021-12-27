@@ -5,7 +5,6 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
-import java.util.Arrays;
 
 import lib.Poll;
 import lib.PollSink;
@@ -13,12 +12,6 @@ import lib.PollSink;
 public class Udp implements PollSink {
 	public static final int MAX_UDP_ENDPOINTS = 16;
 	public static final int MAX_UDP_PACKET_SIZE = 4096;
-	
-	public static class Stats {
-		public int bytesSent;
-		public int packetsSent;
-		public float kbpsSent;
-	}
 	
 	private DatagramChannel datagramChannel;
 	private UdpCallbacks callbacks;

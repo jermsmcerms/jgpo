@@ -5,7 +5,6 @@ public class ApiSynchronizingEvent extends JGPOEvent {
 	public int total;
 	public ApiSynchronizingEvent(JGPOEventCode code) {
 		super(code);
-		// TODO Auto-generated constructor stub
 	}
 
 }

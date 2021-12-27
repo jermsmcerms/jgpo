@@ -15,5 +15,5 @@ public class UdpPeerEvent {
     public EventType eventType;
 
 
-    public UdpPeerEvent(EventType t) { this.eventType = t; }
+    public UdpPeerEvent(EventType eventType) { this.eventType = eventType; }
  };

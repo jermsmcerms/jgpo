@@ -1,5 +1,6 @@
 package lib.utils;
 
+// TODO: is there a better way to handle needing to return n number of values?...
 public class GeneralDataPackage {
 	private Object[] data_set;
 	public GeneralDataPackage(Object...args) {
