@@ -27,7 +27,7 @@ public class SyncTestBackend implements JGPOSession {
 	}
 
 	@Override
-	public JGPOErrorCodes syncInput(Object values, int disconnect_flags) {
+	public GeneralDataPackage syncInput() {
 		// TODO Auto-generated method stub
 		return null;
 	}

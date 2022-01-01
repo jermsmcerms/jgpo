@@ -7,5 +7,4 @@ public class InputEvent extends UdpPeerEvent {
 	public InputEvent(EventType eventType) {
 		super(eventType);
 	}
-
 }

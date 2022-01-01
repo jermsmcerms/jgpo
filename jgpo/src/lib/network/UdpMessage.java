@@ -48,7 +48,7 @@ import lib.utils.UdpMessageBodyFactory;
  * 
  * @author jerms_mcerms
  */
-public class UdpMsg {
+public class UdpMessage {
 	public static final int UDP_MSG_MAX_PLAYERS = 4;
 	public Header header;
 	public UdpMessageBody messageBody;
@@ -71,7 +71,7 @@ public class UdpMsg {
 		public int headerSizeInBytes = 9; // 4 bytes * 2 (two ints) + 1 (one byte)
 	}
 	
-	public UdpMsg(byte[] message) {
+	public UdpMessage(byte[] message) {
 		header = new Header();
 		header.magicNumber = ((message[0] & 0xFF) << 24) |
 				  			 ((message[1] & 0xFF) << 16) |
@@ -88,7 +88,7 @@ public class UdpMsg {
 		messageBody = UdpMessageBodyFactory.makeUdpMessageBody(message);
 	}
 
-	public UdpMsg(UdpMessageBody.MessageType messageType) {
+	public UdpMessage(UdpMessageBody.MessageType messageType) {
 		header = new Header();
 		header.messageType = (byte) messageType.ordinal();
 		messageBody = UdpMessageBodyFactory.makeUdpMessageBody(messageType);

@@ -5,5 +5,4 @@ public class NetworkInterruptedEvent extends UdpPeerEvent {
 	public NetworkInterruptedEvent(EventType eventType) {
 		super(eventType);
 	}
-
 }

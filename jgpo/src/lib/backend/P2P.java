@@ -13,12 +13,14 @@ import api.apievents.JGPOEvent;
 import api.apievents.JGPOEvent.JGPOEventCode;
 import api.apievents.ApiSynchronizingEvent;
 import api.apievents.ConnectionInterruptedEvent;
+import lib.GameInput;
 import lib.Poll;
 import lib.Sync;
 import lib.network.Udp;
 import lib.network.UdpCallbacks;
-import lib.network.UdpMsg;
+import lib.network.UdpMessage;
 import lib.network.UdpPeer;
+import lib.network.udppeerevents.InputEvent;
 import lib.network.udppeerevents.NetworkInterruptedEvent;
 import lib.network.udppeerevents.PeerSynchronizingEvent;
 import lib.network.udppeerevents.UdpPeerEvent;
@@ -30,7 +32,7 @@ public class P2P extends UdpCallbacks implements JGPOSession {
 	public static final int DEFAULT_DISCONNECT_TIEMOUT = 5000;
 	public static final int DEFAULT_DISCONNECT_NOTIFY_START = 750;
 	
-	private SessionCallbacks callbacks;
+	private SessionCallbacks apiCallbacks;
 	private Poll poll;
 	private Sync sync;
 	private Udp udp;
@@ -46,10 +48,11 @@ public class P2P extends UdpCallbacks implements JGPOSession {
 	private int disconnectTimeout;
 	private int disconnectNotifyStart;
 	
-	private UdpMsg.ConnectStatus[] localConnectStatus;
+	private UdpMessage.ConnectStatus[] localConnectStatus;
 	
-	public P2P(SessionCallbacks cb, String game, int localPort, int numPlayers) {
-		this.callbacks = cb;
+	public P2P(SessionCallbacks cb, String game, int numPlayers, int localPort) {
+		this.apiCallbacks = cb;
+		this.numPlayers = numPlayers;
 		try {
 			udp = new Udp(localPort, this);
 		} catch (IOException e) {
@@ -61,15 +64,16 @@ public class P2P extends UdpCallbacks implements JGPOSession {
 			poll = udp.getPoll();
 		}
 		
-		this.numPlayers = numPlayers;
 		endpoints = new UdpPeer[this.numPlayers];
 		
-		localConnectStatus = new UdpMsg.ConnectStatus[UdpMsg.UDP_MSG_MAX_PLAYERS];
+		localConnectStatus = new UdpMessage.ConnectStatus[UdpMessage.UDP_MSG_MAX_PLAYERS];
 		for(int i = 0; i < localConnectStatus.length; i++) {
-			localConnectStatus[i] = new UdpMsg.ConnectStatus(false, -1);
+			localConnectStatus[i] = new UdpMessage.ConnectStatus(false, -1);
 		}
+
+		sync = new Sync(this.apiCallbacks, this.numPlayers);
 		
-		this.callbacks.beginGame(game); // apart of the api but?...
+		this.apiCallbacks.beginGame(game); // apart of the api but?...
 	}
 	
 	@Override
@@ -96,20 +100,48 @@ public class P2P extends UdpCallbacks implements JGPOSession {
 		int queue;
 		JGPOErrorCodes result;
 		
+		if(sync.isInRollbackMode()) {
+			return JGPOErrorCodes.JGPO_IN_ROLLBACK;
+		}
+		
 		if(synchronizing) {
 			return JGPOErrorCodes.JGPO_NOT_SYNCHRONIZED;
 		}
 		
+		queue = playerHandleToQueue(player);
+		if(queue < 0 || queue >= numPlayers) {
+			return JGPOErrorCodes.JGPO_INVALID_PLAYER_HANDLE;
+		}
 		
+		GameInput input = new GameInput(-1, (int)values);
 		
+		if(!sync.addLocalInput(queue, input)) {
+			return JGPOErrorCodes.JGPO_PREDICTION_THRESHOLD;
+		}
+		
+		input.setFrame(sync.getFrameCount());
+		if(input.getFrame() != GameInput.NULL_FRAME) {
+			localConnectStatus[queue].lastFrame = input.getFrame();
+			for(int i = 0; i < numPlayers; i++) {
+				UdpPeer peer = endpoints[i];
+				if(peer != null) {
+					if(peer.isInitialized()) {
+						peer.sendInput(input);
+					}
+				}
+			}
+		}
 		return JGPOErrorCodes.JGPO_OK;
 	}
 	
 	@Override
 	public JGPOErrorCodes doPoll(long timeout) {
-		poll.pump(0);
-		processEvents(endpoints);
-		processEvents(spectators);
+		if(!sync.isInRollbackMode()) {
+			poll.pump(0);
+			processEvents(endpoints);
+//			Uncomment when spectators are ready
+//			processEvents(spectators);
+		}
 		return JGPOErrorCodes.JGPO_OK;
 	}
 
@@ -151,18 +183,21 @@ public class P2P extends UdpCallbacks implements JGPOSession {
 	}
 
 	@Override
-	public JGPOErrorCodes syncInput(Object values, int disconnectFlags) {
-		// TODO Auto-generated method stub
-		return null;
+	public GeneralDataPackage syncInput() {
+		if(synchronizing) {
+			return new GeneralDataPackage(JGPOErrorCodes.JGPO_NOT_SYNCHRONIZED);
+		}
+		
+		return sync.synchronizeInputs();
 	}
 
 	@Override
-	public void onMsg(SocketAddress from, UdpMsg msg) {
+	public void onMsg(SocketAddress from, UdpMessage msg) {
 		processPeerMessage(endpoints, from, msg);
-		processPeerMessage(spectators, from, msg);
+//		processPeerMessage(spectators, from, msg);
 	}
 	
-	private void processPeerMessage(UdpPeer[] peers, SocketAddress from, UdpMsg msg) {
+	private void processPeerMessage(UdpPeer[] peers, SocketAddress from, UdpMessage msg) {
 		for(int i = 0; i < numPlayers; i++) {
 			UdpPeer player = peers[i];
 			if(player != null && player.handlesMessage(from, msg)) {
@@ -172,8 +207,8 @@ public class P2P extends UdpCallbacks implements JGPOSession {
 		}
 	}
 
-	private JGPOErrorCodes playerHandleToQueue(JGPOPlayerHandle player, int queue) {
-		return JGPOErrorCodes.JGPO_OK;
+	private int playerHandleToQueue(JGPOPlayerHandle player) {
+		return 0;
 	}
 	
 	private JGPOPlayerHandle queueToPlayerHandle(int queue) {
@@ -205,9 +240,6 @@ public class P2P extends UdpCallbacks implements JGPOSession {
 				}	
 			}
 		}
-		
-		JGPOEvent runningEvent = JGPOEventFactory.makeApiEvent(JGPOEventCode.JGPO_RUNNING);
-		callbacks.onEvent(runningEvent);
 		synchronizing = false;
 	}
 	
@@ -235,63 +267,47 @@ public class P2P extends UdpCallbacks implements JGPOSession {
 			if(peers[i] != null) {
 				event = peers[i].getEvent();
 				while(event != null) {
-					onUdpPeerEvent(event, queueToPlayerHandle(i));
+					if(event.eventType == UdpPeerEvent.EventType.Synchronzied) {
+						System.out.println("sync'd...");
+						checkInitialSync();
+						apiCallbacks.onEvent(new JGPOEvent(JGPOEvent.JGPOEventCode.JGPO_RUNNING, queueToPlayerHandle(i).playerHandle));
+					} else if(event.eventType == UdpPeerEvent.EventType.Input) {
+						try {
+							addRemoteInput(event, i);
+						} catch (Exception e) {
+							System.out.println(e.getMessage());
+						}
+					} else if (event.eventType == UdpPeerEvent.EventType.Disconnected) {
+						disconnectPlayer(queueToPlayerHandle(i));
+					} else {
+						sendEventToApi(event, i);						
+					}
 					event = peers[i].getEvent();
 				}
 			}
 		}
 	}
 
-	// TODO: can this be re-factored into some kind of observer
-	// pattern? UdpEvent event,
-	private void onUdpPeerEvent(UdpPeerEvent event, JGPOPlayerHandle handle) {
-		switch (event.eventType) {
-			case Connected :
-				JGPOEvent connectedEvent = 
-					JGPOEventFactory.makeApiEvent(JGPOEvent.JGPOEventCode.JGPO_CONNECTED_TO_PEER);
-				connectedEvent.playerHandle.playerHandle = handle.playerHandle;
-				callbacks.onEvent(connectedEvent);
-				break;
-			case NetworkResumed :
-				JGPOEvent networkResumedEvent =
-					JGPOEventFactory.makeApiEvent(JGPOEvent.JGPOEventCode.JGPO_CONNECTION_RESUMED);
-				networkResumedEvent.playerHandle.playerHandle = handle.playerHandle;
-				callbacks.onEvent(networkResumedEvent);
-				break;
-			case Disconnected :
-				break;
-			case Input :
-				break;
-			case Synchronzied :
-				JGPOEvent synchronizedEvent = 
-					JGPOEventFactory.makeApiEvent(JGPOEvent.JGPOEventCode.JGPO_SYNCHRONIZED_WITH_PEER);
-				synchronizedEvent.playerHandle.playerHandle = handle.playerHandle;
-				callbacks.onEvent(synchronizedEvent);
-				checkInitialSync();
-				break;
-			case Unknown :
-				break;
-			case Synchronizing :
-				ApiSynchronizingEvent apiSynchronizingEvent = 
-					(ApiSynchronizingEvent) JGPOEventFactory.makeApiEvent(JGPOEvent.JGPOEventCode.JGPO_SYNCHRONIZING_WITH_PEER);
-				apiSynchronizingEvent.playerHandle.playerHandle = handle.playerHandle;
-				PeerSynchronizingEvent peerSyncEvent = (PeerSynchronizingEvent)event;
-				apiSynchronizingEvent.count = peerSyncEvent.count;
-				apiSynchronizingEvent.total = peerSyncEvent.total;
-				callbacks.onEvent(apiSynchronizingEvent);
-				break;
-			case NetworkInterrupted :
-				ConnectionInterruptedEvent connectionInterruptedEvent = 
-					(ConnectionInterruptedEvent) JGPOEventFactory.makeApiEvent(JGPOEvent.JGPOEventCode.JGPO_SYNCHRONIZING_WITH_PEER);
-				NetworkInterruptedEvent networkInterrupted = (NetworkInterruptedEvent)event;
-				connectionInterruptedEvent.playerHandle.playerHandle = handle.playerHandle;
-				connectionInterruptedEvent.disconnectTimeout = networkInterrupted.disconnectTimeout;
-				callbacks.onEvent(connectionInterruptedEvent);
-				break;
-			default :
-				break;
+	private void addRemoteInput(UdpPeerEvent event, int queue) throws Exception {
+		InputEvent inputEvent = (InputEvent) event;
+		if(!localConnectStatus[queue].disconnected) {
+			int currentRemoteFrame = localConnectStatus[queue].lastFrame;
+			int newRemoteFrame = inputEvent.input.getFrame();
+			if(isCurrentFrameNullOrTooFarAhead(currentRemoteFrame, newRemoteFrame)) {
+				throw new Exception("Current frame is null or new frame is too far ahead!");
+			}
 		}
 	}
-	
+
+	private boolean isCurrentFrameNullOrTooFarAhead(int currentFrame, int newFrame) {
+		return currentFrame == GameInput.NULL_FRAME || newFrame == (currentFrame +1);
+	}
+
+	private void sendEventToApi(UdpPeerEvent event, int queue) {
+		JGPOPlayerHandle handle = queueToPlayerHandle(queue);
+		JGPOEvent jgpoEvent = JGPOEventFactory.makeApiEvent(event, handle);
+		apiCallbacks.onEvent(jgpoEvent);		
+	}
+
 	private void onUdpProtocolSpectatorEvent(UdpPeerEvent event, int queue) {}
 }

@@ -1,6 +1,8 @@
 package api.apievents;
 
 import api.JgpoNet.JGPOPlayerHandle;
+import app.NonGameState;
+import app.NonGameState.PlayerConnectState;
 
 public class JGPOEvent {
 	public enum JGPOEventCode {          
@@ -25,9 +27,27 @@ public class JGPOEvent {
 
 	public JGPOEventCode code;
 	public JGPOPlayerHandle playerHandle;
-	
-	public JGPOEvent(JGPOEventCode code) {
+		
+	public JGPOEvent(JGPOEventCode code, int playerHandle) {
 		this.code = code;
 		this.playerHandle = new JGPOPlayerHandle();
+		this.playerHandle.playerHandle = playerHandle;
+	}
+
+	public void processEvent(NonGameState nonGameState) {
+		// If these events  ever get more complex they can be abstracted away
+		// into their own class. Since they only handle which player needs
+		// to be updated, this should be okay for now.
+		NonGameState.PlayerConnectState currentState = null;
+		if(code == JGPOEventCode.JGPO_CONNECTED_TO_PEER) {
+			currentState = PlayerConnectState.Connecting;
+			nonGameState.setConnectState(playerHandle, currentState);
+		} else if(code == JGPOEventCode.JGPO_RUNNING ||
+				code == JGPOEventCode.JGPO_CONNECTION_RESUMED) {
+			currentState = PlayerConnectState.Running;
+			nonGameState.setConnectState(currentState);
+		} else if(code == JGPOEventCode.JGPO_SYNCHRONIZED_WITH_PEER) {
+			nonGameState.updateConnectProgress(playerHandle, 100);
+		}
 	}
 }

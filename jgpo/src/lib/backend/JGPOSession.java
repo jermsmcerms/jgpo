@@ -9,7 +9,7 @@ import lib.utils.GeneralDataPackage;
 public interface JGPOSession {
 	public GeneralDataPackage addPlayer(Player player);
 	public JGPOErrorCodes addLocalInput(JGPOPlayerHandle player, Object values);
-	public JGPOErrorCodes syncInput(Object values, int disconnect_flags);
+	public GeneralDataPackage syncInput();
 	
 	default JGPOErrorCodes doPoll(long timeout) { return JGPOErrorCodes.JGPO_OK; }
 	default JGPOErrorCodes incrementFrame() { return JGPOErrorCodes.JGPO_OK; }

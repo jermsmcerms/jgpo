@@ -27,4 +27,8 @@ public class GameInput {
 	public void setFrame(int frame) {
 		this.frame = frame;
 	}
+
+	public void incrementFrame() {
+		frame++;
+	}
 }

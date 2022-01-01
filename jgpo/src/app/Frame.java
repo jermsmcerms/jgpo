@@ -33,18 +33,18 @@ public class Frame extends JFrame {
 				case Connecting :
 					ships[i].connectState = (players[i].type == JGPOPlayerType.JGPO_PLAYERTYPE_LOCAL) ? "Local player: " : "Connecting...";
 					break;
-				case Disconnected :
+				case Synchronizing :
+					ships[i].connectState = "Synchronizing";
 					break;
 				case Disconnecting :
+					ships[i].connectState = "Waiting for player...";
+				case Disconnected :
+					ships[i].connectState = "Disconnected";
 					break;
-				case Running :
+				case Running:
+					ships[i].connectState = "";
+					gameWindow.getRenderer().setStatus("");
 					break;
-				case Synchronizing :
-					break;
-				default :
-					ships[i].connectState = "default text...";
-					break;
-				
 			}
 		}
 		

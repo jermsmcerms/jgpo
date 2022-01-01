@@ -6,5 +6,4 @@ public class PeerSynchronizingEvent extends UdpPeerEvent {
 	public PeerSynchronizingEvent(EventType eventType) {
 		super(eventType);
 	}
-
 }

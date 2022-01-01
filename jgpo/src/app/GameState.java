@@ -1,6 +1,7 @@
 package app;
 
 import java.awt.Rectangle;
+import java.util.Arrays;
 
 import app.Ship.Bullet;
 import app.Ship.Position;
@@ -85,7 +86,7 @@ public class GameState {
 	}
 
 	private double updateThrust(int input) {
-		double thrust;
+		double thrust = 0.0;
 		if((input & VectorWarInputs.THRUST.getInput()) != 0) {
 			thrust = Constants.SHIP_THRUST;
 		} else if((input & VectorWarInputs.BREAK.getInput()) != 0) {
@@ -97,7 +98,7 @@ public class GameState {
 	}
 
 	private double updateHeading(int input, Ship ship) {
-		double heading;
+		double heading = 0.0;
 		if((input & VectorWarInputs.ROTATE_RIGHT.getInput()) != 0) {
 			heading = (ship.heading + Constants.ROTATE_INCREMENT) % 360;
 		} else if((input & VectorWarInputs.ROTATE_LEFT.getInput()) != 0) {

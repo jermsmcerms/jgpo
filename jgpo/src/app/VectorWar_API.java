@@ -52,8 +52,10 @@ public class VectorWar_API extends JgpoApi {
 
 	@Override
 	public GeneralDataPackage jgpoSynchronizeInputs() {
-		// TODO Auto-generated method stub
-		return new GeneralDataPackage(JGPOErrorCodes.JGPO_OK);
+		if(session == null) {
+			return new GeneralDataPackage(JGPOErrorCodes.JGPO_INVALID_SESSION);
+		}
+		return session.syncInput();
 	}
 
 	@Override

@@ -22,6 +22,7 @@ public class Udp implements PollSink {
 	public Udp(int localPort, UdpCallbacks callbacks) throws IOException {
 		datagramChannel = DatagramChannel.open();
 		datagramChannel.configureBlocking(false);
+		System.out.println("binding to localport: " + localPort);
 		datagramChannel.socket().bind(new InetSocketAddress(localPort));
 		this.poll = new Poll();
 		poll.registerLoop(this);
@@ -53,7 +54,7 @@ public class Udp implements PollSink {
 				if(fromAddress == null) {
 					break;
 				} else {
-					UdpMsg receivedMessage = new UdpMsg(receiveBuffer.array());
+					UdpMessage receivedMessage = new UdpMessage(receiveBuffer.array());
 					callbacks.onMsg(fromAddress, receivedMessage);
 				}
 			} catch (IOException ex) {

@@ -11,7 +11,7 @@ import api.apievents.JGPOEvent;
 import lib.GameInput;
 import lib.PollSink;
 import lib.TimeSync;
-import lib.network.UdpMsg.ConnectStatus;
+import lib.network.UdpMessage.ConnectStatus;
 import lib.network.messages.*;
 import lib.network.udppeerevents.PeerSynchronizingEvent;
 import lib.network.udppeerevents.UdpPeerEvent;
@@ -42,8 +42,8 @@ public class UdpPeer implements PollSink {
 	private int statsStartTime;
 	
 	// Network state machine
-	private UdpMsg.ConnectStatus[] localConnectStatus;
-	private UdpMsg.ConnectStatus[] peerConnectStatus;
+	private UdpMessage.ConnectStatus[] localConnectStatus;
+	private UdpMessage.ConnectStatus[] peerConnectStatus;
 	private State currentState;
 	private JGPOEvent event;
 	private int roundTripsRemaining;
@@ -84,7 +84,7 @@ public class UdpPeer implements PollSink {
 	private class OoPacket {
 		public int sendTime;
 		public SocketAddress destination;
-		public UdpMsg message;
+		public UdpMessage message;
 	}
 
 	private enum State {
@@ -99,12 +99,12 @@ public class UdpPeer implements PollSink {
 		// TODO: Change parameter list to use InetSocketAddress
 		this.peerAddress = new InetSocketAddress(ipAddress, port);
 		
-		this.localConnectStatus = new UdpMsg.ConnectStatus[localConnectStatus.length];
+		this.localConnectStatus = new UdpMessage.ConnectStatus[localConnectStatus.length];
 		System.arraycopy(localConnectStatus, 0, 
 			this.localConnectStatus, 0, localConnectStatus.length);
-		peerConnectStatus = new UdpMsg.ConnectStatus[UdpMsg.UDP_MSG_MAX_PLAYERS];
+		peerConnectStatus = new UdpMessage.ConnectStatus[UdpMessage.UDP_MSG_MAX_PLAYERS];
 		for(int i = 0; i < peerConnectStatus.length; i++) {
-			peerConnectStatus[i] = new UdpMsg.ConnectStatus(false, -1);
+			peerConnectStatus[i] = new UdpMessage.ConnectStatus(false, -1);
 		}
 		
 		ooPacket = new OoPacket();
@@ -134,7 +134,7 @@ public class UdpPeer implements PollSink {
 	
 	public boolean isInitialized() { return udp != null; }		
 
-	public void onMessage(UdpMsg message) {
+	public void onMessage(UdpMessage message) {
 		boolean messageHandled = false;
 		
 		// TODO : Re-factor so I don't have instantiate this everytime I need to process a message
@@ -191,7 +191,7 @@ public class UdpPeer implements PollSink {
 		
 	}
 	
-	public boolean handlesMessage(SocketAddress from, UdpMsg msg) {
+	public boolean handlesMessage(SocketAddress from, UdpMessage msg) {
 		if(udp == null) {
 			return false;
 		}
@@ -199,10 +199,10 @@ public class UdpPeer implements PollSink {
 		return peerAddress.equals(from);
 	}
 
+	public void sendInput(GameInput gameInput) {}
+
 	private boolean getPeerConnectStatus(int id, int frame) { return true; }
-	
-	private void sendInput(GameInput gameInput) {}
-	
+		
 	private void disconnect() {}
 	
 	private void getNetworkStats(NetworkStats stats) {}
@@ -217,14 +217,14 @@ public class UdpPeer implements PollSink {
 	
 	private void sendSyncRequest() {
 		random = ThreadLocalRandom.current().nextInt() & 0xFFFF;
-		UdpMsg syncRequest = new UdpMsg(UdpMessageBody.MessageType.SyncRequest);
+		UdpMessage syncRequest = new UdpMessage(UdpMessageBody.MessageType.SyncRequest);
 		SyncRequest message = (SyncRequest)syncRequest.messageBody;
 		message.randomRequest = random;
 		syncRequest.messageBody = message;
 		sendMessage(syncRequest);
 	}
 	
-	private void sendMessage(UdpMsg message) {
+	private void sendMessage(UdpMessage message) {
 		packetsSent++;
 		lastSendTime = System.currentTimeMillis();
 		message.header.magicNumber = magicNumber;
@@ -241,16 +241,16 @@ public class UdpPeer implements PollSink {
 		}
 	}
 	
-	private void sendPendingOutput(UdpMsg message) {}
+	private void sendPendingOutput(UdpMessage message) {}
 	
-	private boolean onInvalid(UdpMsg message) { return false; }
+	private boolean onInvalid(UdpMessage message) { return false; }
 	
-	private boolean onSyncRequest(UdpMsg message) { 
+	private boolean onSyncRequest(UdpMessage message) { 
 		if(remoteMagicNumber != 0	&& message.header.magicNumber != remoteMagicNumber) {
 			return false;
 		}
 		
-		UdpMsg syncReply = new UdpMsg(UdpMessageBody.MessageType.SyncReply);
+		UdpMessage syncReply = new UdpMessage(UdpMessageBody.MessageType.SyncReply);
 		SyncReply syncReplyBody = (SyncReply) syncReply.messageBody; 
 		SyncRequest syncRequest = (SyncRequest) message.messageBody;
 		
@@ -261,7 +261,7 @@ public class UdpPeer implements PollSink {
 		return true; 
 	}
 	
-	private boolean onSyncReply(UdpMsg message) {
+	private boolean onSyncReply(UdpMessage message) {
 		if(currentState != State.Syncing) {
 			return message.header.magicNumber == remoteMagicNumber;
 		}
@@ -299,15 +299,15 @@ public class UdpPeer implements PollSink {
 		return true; 
 	}
 	
-	private boolean onInput(UdpMsg message) { return true; }
+	private boolean onInput(UdpMessage message) { return true; }
 	
-	private boolean onInputAck(UdpMsg message) { return true; }
+	private boolean onInputAck(UdpMessage message) { return true; }
 	
-	private boolean onQualityReport(UdpMsg message) { return true; }
+	private boolean onQualityReport(UdpMessage message) { return true; }
 	
-	private boolean onReply(UdpMsg message) { return true; }
+	private boolean onReply(UdpMessage message) { return true; }
 	
-	private boolean onKeepAlive(UdpMsg message) { return true; }
+	private boolean onKeepAlive(UdpMessage message) { return true; }
 	
 	@Override
 	public boolean onLoopPoll(Object o) {

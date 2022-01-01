@@ -9,6 +9,7 @@ import javax.swing.UnsupportedLookAndFeelException;
 import api.JgpoNet.JGPOErrorCodes;
 import api.JgpoNet.JGPOPlayerHandle;
 import api.JgpoNet.JGPOPlayerType;
+import api.apievents.JGPOEvent;
 import api.Player;
 import api.SessionCallbacks;
 import lib.backend.JGPOSession;
@@ -22,7 +23,7 @@ public class VectorWar {
 	private NonGameState nonGameState;
 	private Frame applicationFrame;
 	private JGPOSession session;
-	private SessionCallbacks sessionCallbacks;
+	private VectorWarSessionCallbacks sessionCallbacks;
 	private VectorWar_API api;
 	private PerformanceMonitor performanceMonitor;
 	private int numPlayers;
@@ -89,12 +90,9 @@ public class VectorWar {
 					
 					result = (JGPOErrorCodes)data.getData()[0];
 					if(JGPOErrorCodes.operationSucceded(result)) {
-						int[] inputs = new int[Constants.MAX_SHIPS];
-						System.arraycopy((int[])data.getData()[1], 0, inputs, 0, inputs.length);
+						int disconnectFlags = (int)data.getData()[1];
 
-						int disconnectFlags = (int)data.getData()[2];
-
-						advanceFrame(inputs, disconnectFlags);
+						advanceFrame((int[])data.getData()[2], disconnectFlags);
 					}
 				}
 			}
@@ -142,7 +140,6 @@ public class VectorWar {
 
 	private void advanceFrame(int[] inputs, int disconnectFlags) {
 		gameState.update(inputs, disconnectFlags);
-		
 		nonGameState.now.frameNumber = gameState.frameNumber;
 		nonGameState.now.checksum = 0; // TODO: use checksum function using the game state
 		if(gameState.frameNumber % 90 == 0) {
@@ -157,6 +154,74 @@ public class VectorWar {
 				handles[i] = nonGameState.players[i].handle;
 			}
 		}
+		
 		performanceMonitor.update(session, handles);
 	}
+	
+	private class VectorWarSessionCallbacks implements SessionCallbacks {
+		private JGPOPlayerHandle currentPlayerHandle;
+		private NonGameState.PlayerConnectState currentState;
+		private int connectionProgress;
+		private long nowInMilliSeconds;
+		private long disconnectTimeout;
+		
+		public VectorWarSessionCallbacks() {
+			currentPlayerHandle = new JGPOPlayerHandle();
+			currentPlayerHandle.playerHandle = -1;
+			currentState = NonGameState.PlayerConnectState.Connecting;
+		}
+		
+		public JGPOPlayerHandle getCurrentPlayerHandle() {
+			return currentPlayerHandle;
+		}
+		
+		public NonGameState.PlayerConnectState getCurrentState() {
+			return currentState;
+		}
+		
+		public long getNowInMilliSeconds() {
+			return nowInMilliSeconds;
+		}
+		
+		public long getDisconnectTimeout() {
+			return disconnectTimeout;
+		}
+		
+		@Override
+		public boolean beginGame(String name) {
+			// TODO Auto-generated method stub
+			return false;
+		}
+		
+		@Override
+		public boolean saveGameState() {
+			// TODO Auto-generated method stub
+			return false;
+		}
+		
+		@Override
+		public boolean loadGameState() {
+			// TODO Auto-generated method stub
+			return false;
+		}
+		
+		@Override
+		public boolean logGameState() {
+			// TODO Auto-generated method stub
+			return false;
+		}
+		
+		@Override
+		public boolean advanceFrame(int flags) {
+			// TODO Auto-generated method stub
+			return false;
+		}
+		
+		@Override
+		public boolean onEvent(JGPOEvent event) {
+			event.processEvent(nonGameState);
+			return false;
+		}
+	}
 }
+

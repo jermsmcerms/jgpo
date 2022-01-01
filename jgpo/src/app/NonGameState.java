@@ -46,14 +46,26 @@ public class NonGameState {
 			if(players[i].handle.playerHandle == handle.playerHandle) {
 				players[i].connectProgress = 0;
 				players[i].state = state;
+				System.out.println(players[i].state);
 				break;
 			}
 		}
 	}
 	
 	public void setDisconnectTimeout() {}
-	public void setConnectState(PlayerConnectState state) {}
-	public void updateConnectProgress(int progress) {}
+	public void setConnectState(PlayerConnectState state) {
+		for(int i = 0; i < numPlayers; i++) {
+			players[i].state = state;
+		}
+	}
+	
+	public void updateConnectProgress(JGPOPlayerHandle playerHandle, int progress) {
+		for(int i = 0; i < numPlayers; i++) {
+			if(players[i].handle.playerHandle == playerHandle.playerHandle) {
+				players[i].connectProgress = progress;
+			}
+		}
+	}
 
 	public int getNumPlayers() {
 		return numPlayers;
