@@ -141,6 +141,7 @@ public class P2P extends UdpCallbacks implements JGPOSession {
 			processEvents(endpoints);
 //			Uncomment when spectators are ready
 //			processEvents(spectators);
+			
 		}
 		return JGPOErrorCodes.JGPO_OK;
 	}

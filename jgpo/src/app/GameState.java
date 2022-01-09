@@ -45,6 +45,8 @@ public class GameState {
 			ships[i] = new Ship();
 			ships[i].shipPosition = ships[i].new Position();
 			ships[i].shipVelocity = ships[i].new Velocity();
+			ships[i].shipVelocity.dx = 0.0;
+			ships[i].shipVelocity.dy = 0.0;
 			ships[i].health = Constants.STARTING_HEALTH;
 			
 			int heading = i * 360 / numShips;
@@ -75,14 +77,17 @@ public class GameState {
 
 	private ShipActionData parseInputs(int input, int which) {
 		Ship ship = ships[which];
-		double thrust = 0, heading = 0;
+		double thrust = 0.0, heading = 0.0;
 		boolean fire = false;
 		
 		heading = updateHeading(input, ship);
 		thrust = updateThrust(input);
 		fire = (input & VectorWarInputs.FIRE.getInput()) != 0 ? true : false;
 
-		return new ShipActionData(heading, thrust, fire);
+		// TODO : perhaps condense param list?
+		// found a bug where thrust and heading where switched.
+		// reducing the param's would reduce the likelyhood of another bug appearing...
+		return new ShipActionData(thrust, heading, fire);
 	}
 
 	private double updateThrust(int input) {
@@ -94,6 +99,7 @@ public class GameState {
 		} else {
 			thrust = 0;
 		}
+		
 		return thrust;
 	}
 
@@ -171,7 +177,6 @@ public class GameState {
 	private void updateVeclocity(ShipActionData data, Ship ship) {
 		double dx = data.thrust * Math.cos(degToRad(data.heading));
 		double dy = data.thrust * Math.sin(degToRad(data.heading));
-		
 		
 		ship.shipVelocity.dx += dx;
 		ship.shipVelocity.dy += dy;

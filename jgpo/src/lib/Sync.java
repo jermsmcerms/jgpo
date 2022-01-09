@@ -1,6 +1,7 @@
 package lib;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import api.SessionCallbacks;
@@ -84,6 +85,7 @@ public class Sync {
 				inputs[i] = input.getInput();
 			}
 		}
+		
 		return new GeneralDataPackage(JGPOErrorCodes.JGPO_OK, disconnectFlags, inputs);
 	}
 }
