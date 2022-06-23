@@ -357,7 +357,7 @@ public class UdpPeer implements PollSink {
 	}
 	
 	private boolean onInput(UdpMessage message) { 
-		Input input = (Input)message.messageBody;
+ 		Input input = (Input)message.messageBody;
 		boolean disconnect_requested = input.disconnectRequested == (byte) 1;
         if(disconnect_requested) {
             if(currentState != State.Disconnected && !disconnectEventSent) {
