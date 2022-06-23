@@ -3,6 +3,7 @@ package lib.network;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -13,6 +14,7 @@ import lib.PollSink;
 import lib.TimeSync;
 import lib.network.UdpMessage.ConnectStatus;
 import lib.network.messages.*;
+import lib.network.udppeerevents.InputEvent;
 import lib.network.udppeerevents.PeerSynchronizingEvent;
 import lib.network.udppeerevents.UdpPeerEvent;
 import lib.utils.UdpPeerEventFactory;
@@ -45,6 +47,7 @@ public class UdpPeer implements PollSink {
 	private UdpMessage.ConnectStatus[] localConnectStatus;
 	private UdpMessage.ConnectStatus[] peerConnectStatus;
 	private State currentState;
+	private ConnectionState connectionState;
 	private JGPOEvent event;
 	private int roundTripsRemaining;
 	private int random;
@@ -118,8 +121,16 @@ public class UdpPeer implements PollSink {
 		
 		this.udp.getPoll().registerLoop(this);
 		
+		timeSync = new TimeSync();
+		
 		sendQueue = new ArrayList<>(64);
 		eventQueue = new ArrayList<>(64);
+		pendingOutput = new LinkedList<GameInput>();
+		connectionState = new ConnectionState();
+		
+		lastAckedInput = new GameInput(-1, -1);
+		lastReceivedInput = new GameInput(-1, -1);
+		lastSentInput = new GameInput(-1, -1);
 	}
 
 	public void synchronize() {
@@ -137,11 +148,12 @@ public class UdpPeer implements PollSink {
 	public void onMessage(UdpMessage message) {
 		boolean messageHandled = false;
 		
-		// TODO : Re-factor so I don't have instantiate this everytime I need to process a message
+		// TODO : Re-factor so I don't have instantiate this every time I need to process a message
 		MessageDispatcher[] messageDispatchTable = new MessageDispatcher[] {
 			new MessageDispatcher() { public boolean dispatch() { return onInvalid(message); }},
 			new MessageDispatcher() { public boolean dispatch() { return onSyncRequest(message); }},
-			new MessageDispatcher() { public boolean dispatch() { return onSyncReply(message); }}
+			new MessageDispatcher() { public boolean dispatch() { return onSyncReply(message); }},
+			new MessageDispatcher() { public boolean dispatch() { return onInput(message); }}
 		};
 		
 		int sequence = message.header.sequenceNumber;
@@ -199,7 +211,15 @@ public class UdpPeer implements PollSink {
 		return peerAddress.equals(from);
 	}
 
-	public void sendInput(GameInput gameInput) {}
+	public void sendInput(GameInput gameInput) {
+		if(udp != null) {
+			if(currentState == State.Running) {
+				timeSync.advanceFrame(gameInput, localFrameAdvantage, remoteFrameAdvantage);
+				pendingOutput.add(gameInput);
+			}
+			sendPendingOutput();
+		}
+	}
 
 	private boolean getPeerConnectStatus(int id, int frame) { return true; }
 		
@@ -241,7 +261,44 @@ public class UdpPeer implements PollSink {
 		}
 	}
 	
-	private void sendPendingOutput(UdpMessage message) {}
+	private void sendPendingOutput() {
+		UdpMessage msg = new UdpMessage(UdpMessageBody.MessageType.Input);
+		Input inputMsg = new Input((byte)UdpMessage.UDP_MSG_MAX_PLAYERS);
+        // TODO: something for inputs?
+
+        if(pendingOutput.size() > 0) {
+            inputMsg.startFrame = pendingOutput.get(0).getFrame();
+            for(int i = 0; i < pendingOutput.size(); i++) {
+                GameInput current = pendingOutput.get(i);
+                inputMsg.AddInput(current);
+                lastSentInput = current;
+            }
+        } else {
+            inputMsg.startFrame = 0;
+        }
+
+        inputMsg.acknowlegedFrame = lastReceivedInput.getFrame();
+        inputMsg.numBits = pendingOutput.size();
+        inputMsg.disconnectRequested = currentState == State.Disconnected ? (byte)1 : 0;
+        // Copy local connect status into msg.payload.input.connect_status
+        if(localConnectStatus != null) {
+            // copy this local connect status into the peer connect status for
+        	// the input message
+        	for(int i = 0; i < localConnectStatus.length; i++) {
+        		inputMsg.peerConnectStatus[i] = 
+    				new UdpMessage.ConnectStatus(localConnectStatus[i].disconnected,
+						localConnectStatus[i].lastFrame);
+        	}
+        } else {
+        	localConnectStatus = new UdpMessage.ConnectStatus[UdpMessage.UDP_MSG_MAX_PLAYERS];
+        	for(int i = 0; i < localConnectStatus.length; i++) {
+        		localConnectStatus[i] = new UdpMessage.ConnectStatus(false, 0);
+        	}
+        }
+        
+        msg.messageBody = inputMsg;
+        sendMessage(msg);
+	}
 	
 	private boolean onInvalid(UdpMessage message) { return false; }
 	
@@ -299,7 +356,56 @@ public class UdpPeer implements PollSink {
 		return true; 
 	}
 	
-	private boolean onInput(UdpMessage message) { return true; }
+	private boolean onInput(UdpMessage message) { 
+		Input input = (Input)message.messageBody;
+		boolean disconnect_requested = input.disconnectRequested == (byte) 1;
+        if(disconnect_requested) {
+            if(currentState != State.Disconnected && !disconnectEventSent) {
+                System.out.println("Disconnecting endpoint on remote request");
+                eventQueue.add(new UdpPeerEvent(UdpPeerEvent.EventType.Disconnected));
+                disconnectEventSent = true;
+            }
+        } else {
+        	UdpMessage.ConnectStatus[] remote_status = input.peerConnectStatus;
+            for (int i = 0; i < peerConnectStatus.length; i++) {
+               peerConnectStatus[i].disconnected = peerConnectStatus[i].disconnected || remote_status[i].disconnected;
+               peerConnectStatus[i].lastFrame = Math.max(peerConnectStatus[i].lastFrame, remote_status[i].lastFrame);
+            }
+        }
+
+        if(input.numBits > 0) {
+            int current_frame = input.startFrame;
+            int[] inputs = new int[input.numBits];
+            
+            // This will have to change if we start storing single input's into multiple
+            // bytes.
+            for(int i = 0; i < inputs.length; i++) {
+            	inputs[i] = (int)input.inputs[i];
+            }
+
+            for(int inputValue : inputs) {
+                boolean useInputs = current_frame == lastReceivedInput.getFrame() + 1;
+                lastReceivedInput.setInput(inputValue);
+
+                if(useInputs) {
+                    lastReceivedInput.setFrame(current_frame);
+                    InputEvent event = new InputEvent(UdpPeerEvent.EventType.Input);
+                    event.input = new GameInput(lastReceivedInput.getInput(), lastReceivedInput.getFrame());
+                    eventQueue.add(event);
+                    System.out.println("adding input: " + event.input.getInput() + " to frame: " + event.input.getFrame());
+                    connectionState.running.last_input_packet_recv_time = System.currentTimeMillis();
+                }
+
+                current_frame++;
+            }
+            
+            while(pendingOutput.size() > 0) {
+                lastAckedInput = new GameInput(pendingOutput.get(0).getFrame(), pendingOutput.get(0).getInput());
+                pendingOutput.remove(0);
+            }
+        }
+		return true;
+	}
 	
 	private boolean onInputAck(UdpMessage message) { return true; }
 	
@@ -331,4 +437,25 @@ public class UdpPeer implements PollSink {
 		}
 		return true;
 	}
+}
+	
+class ConnectionState {
+    public Sync sync;
+    public Running running;
+    
+    public ConnectionState() {
+        sync = new Sync();
+        running = new Running();
+    }
+
+    public class Sync {
+        public int round_trips_remaining;
+        public int random;
+    }
+    
+    public class Running {
+    	public long last_quality_report_time;
+    	public long last_network_stats_interval;
+    	public long last_input_packet_recv_time;
+    }
 }

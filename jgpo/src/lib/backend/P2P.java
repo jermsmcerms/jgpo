@@ -113,13 +113,12 @@ public class P2P extends UdpCallbacks implements JGPOSession {
 			return JGPOErrorCodes.JGPO_INVALID_PLAYER_HANDLE;
 		}
 		
-		GameInput input = new GameInput(-1, (int)values);
+		GameInput input = new GameInput((int)values, sync.getFrameCount());
 		
 		if(!sync.addLocalInput(queue, input)) {
 			return JGPOErrorCodes.JGPO_PREDICTION_THRESHOLD;
 		}
 		
-		input.setFrame(sync.getFrameCount());
 		if(input.getFrame() != GameInput.NULL_FRAME) {
 			localConnectStatus[queue].lastFrame = input.getFrame();
 			for(int i = 0; i < numPlayers; i++) {
@@ -141,6 +140,40 @@ public class P2P extends UdpCallbacks implements JGPOSession {
 			processEvents(endpoints);
 //			Uncomment when spectators are ready
 //			processEvents(spectators);
+			if(!synchronizing) {
+				sync.checkSimulation(timeout);
+				int current_frame = sync.getFrameCount();
+				for(UdpPeer peer : endpoints) {
+					if(peer != null) {
+						peer.setLocalFrameNumber(current_frame);
+					}
+				}
+				
+				int total_min_confirmed = poll2Players(current_frame);
+                if (total_min_confirmed >= 0) {
+                    assert (total_min_confirmed != Integer.MAX_VALUE);
+                    sync.setLastConfirmedFrame(total_min_confirmed);
+                }
+				
+				if(current_frame > nextRecommendedSleep) {
+					int interval = 0;
+					for(UdpPeer peer : endpoints) {
+						if(peer != null) {
+							interval = Math.max(0, peer.recommendFrameDelay());
+						}
+					}
+	                
+	                if(interval > 0) {
+	                	try {
+	                		System.out.println("sleep for " + interval + " frames.");
+	                        Thread.sleep(1000L * interval / 60);
+	                    } catch (InterruptedException e) {
+	                        e.printStackTrace();
+	                    }
+	                	nextRecommendedSleep = current_frame + RECOMMENDATION_INTERVAL;
+	                }
+				}
+			}
 			
 		}
 		return JGPOErrorCodes.JGPO_OK;
@@ -148,8 +181,10 @@ public class P2P extends UdpCallbacks implements JGPOSession {
 
 	@Override
 	public JGPOErrorCodes incrementFrame() {
-		// TODO Auto-generated method stub
-		return JGPOSession.super.incrementFrame();
+		sync.incrementFrame();
+		doPoll(0);
+		// poll sync events
+		return JGPOErrorCodes.JGPO_OK;
 	}
 
 	@Override
@@ -245,7 +280,15 @@ public class P2P extends UdpCallbacks implements JGPOSession {
 	}
 	
 	private int poll2Players(int currentFrame) {
-		return 0;
+		int total_min_confirmed = Integer.MAX_VALUE;
+        for(int i = 0; i < numPlayers; i++) {
+            // TODO: Get peer connect status and disconnect if needed.
+            if(!localConnectStatus[i].disconnected) {
+                total_min_confirmed =
+                    Math.min(localConnectStatus[i].lastFrame, total_min_confirmed);
+            }
+        }
+        return total_min_confirmed;
 	}
 	
 	private int pollNPlayers(int currentFrame) {
@@ -271,7 +314,8 @@ public class P2P extends UdpCallbacks implements JGPOSession {
 					if(event.eventType == UdpPeerEvent.EventType.Synchronzied) {
 						System.out.println("sync'd...");
 						checkInitialSync();
-						apiCallbacks.onEvent(new JGPOEvent(JGPOEvent.JGPOEventCode.JGPO_RUNNING, queueToPlayerHandle(i).playerHandle));
+						apiCallbacks.onEvent(new JGPOEvent(JGPOEvent.JGPOEventCode.JGPO_RUNNING, 
+							queueToPlayerHandle(i).playerHandle));
 					} else if(event.eventType == UdpPeerEvent.EventType.Input) {
 						try {
 							addRemoteInput(event, i);
@@ -294,14 +338,11 @@ public class P2P extends UdpCallbacks implements JGPOSession {
 		if(!localConnectStatus[queue].disconnected) {
 			int currentRemoteFrame = localConnectStatus[queue].lastFrame;
 			int newRemoteFrame = inputEvent.input.getFrame();
-			if(isCurrentFrameNullOrTooFarAhead(currentRemoteFrame, newRemoteFrame)) {
-				throw new Exception("Current frame is null or new frame is too far ahead!");
-			}
+			assert(currentRemoteFrame == GameInput.NULL_FRAME || 
+				newRemoteFrame == currentRemoteFrame + 1);
+			sync.addRemoteInput(queue, inputEvent.input);
+			localConnectStatus[queue].lastFrame = inputEvent.input.getFrame();
 		}
-	}
-
-	private boolean isCurrentFrameNullOrTooFarAhead(int currentFrame, int newFrame) {
-		return currentFrame == GameInput.NULL_FRAME || newFrame == (currentFrame +1);
 	}
 
 	private void sendEventToApi(UdpPeerEvent event, int queue) {

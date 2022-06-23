@@ -1,5 +1,6 @@
 package lib.utils;
 
+import lib.network.UdpMessage;
 import lib.network.messages.*;
 
 public class UdpMessageBodyFactory {
@@ -9,6 +10,8 @@ public class UdpMessageBodyFactory {
 				return new SyncRequest();
 			case SyncReply :
 				return new SyncReply();
+			case Input :
+				return new Input((byte)UdpMessage.UDP_MSG_MAX_PLAYERS);
 			default :
 				return null;
 		}
@@ -22,6 +25,8 @@ public class UdpMessageBodyFactory {
 				return new SyncRequest(message);
 			case 2 :
 				return new SyncReply(message);
+			case 3 :
+				return new Input(message);
 			default :
 				return null;
 		}

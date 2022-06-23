@@ -8,6 +8,7 @@ import java.nio.channels.DatagramChannel;
 
 import lib.Poll;
 import lib.PollSink;
+import lib.network.messages.UdpMessageBody;
 
 public class Udp implements PollSink {
 	public static final int MAX_UDP_ENDPOINTS = 16;

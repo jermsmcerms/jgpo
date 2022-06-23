@@ -42,12 +42,13 @@ public class VectorWar_API extends JgpoApi {
 		return session.doPoll(timeout);
 	}
 
+	// TODO: implement function tomorrow
 	@Override
 	public JGPOErrorCodes jgpoAddLocalInput(JGPOPlayerHandle player, Object values) {
 		if(session == null) {
 			return JGPOErrorCodes.JGPO_INVALID_SESSION;
 		}
-		return JGPOErrorCodes.JGPO_OK;
+		return session.addLocalInput(player, values);
 	}
 
 	@Override
@@ -66,8 +67,10 @@ public class VectorWar_API extends JgpoApi {
 
 	@Override
 	public JGPOErrorCodes jgpoAdvanceFrame() {
-		// TODO Auto-generated method stub
-		return null;
+		if(session == null) {
+			return JGPOErrorCodes.JGPO_INVALID_SESSION;
+		}
+		return session.incrementFrame();
 	}
 
 	@Override

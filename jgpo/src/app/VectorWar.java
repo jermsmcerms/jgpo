@@ -1,6 +1,10 @@
 package app;
 
 import java.awt.EventQueue;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 
 import javax.swing.UIManager;
@@ -12,6 +16,8 @@ import api.JgpoNet.JGPOPlayerType;
 import api.apievents.JGPOEvent;
 import api.Player;
 import api.SessionCallbacks;
+import lib.SavedFrame;
+import lib.SavedState;
 import lib.backend.JGPOSession;
 import lib.utils.GeneralDataPackage;
 import lib.utils.PerformanceMonitor;
@@ -74,17 +80,18 @@ public class VectorWar {
 	public void executeSingleFrame() {
 		if(applicationFrame != null) {
 			JGPOErrorCodes result = JGPOErrorCodes.JGPO_OK;
-			if(	nonGameState.localPlayerHandle.playerHandle != 
-				JGPOErrorCodes.JGPO_INVALID_PLAYER_HANDLE.getCode()) {
+			// Should be some kind of error code...
+			if(	nonGameState.localPlayerHandle.playerHandle != -1) {
 				int local_input = 0;
 				
 				if(SYNC_TEST) {
 					local_input = ThreadLocalRandom.current().nextInt();
 				} else {
-					local_input = applicationFrame.getInput();
+					local_input = 1 << 4;//applicationFrame.getInput();
 				}
 				
 				result = api.jgpoAddLocalInput(nonGameState.localPlayerHandle, local_input);
+				
 				if(JGPOErrorCodes.operationSucceded(result)) {
 					GeneralDataPackage data = api.jgpoSynchronizeInputs();
 					
@@ -95,6 +102,9 @@ public class VectorWar {
 						advanceFrame((int[])data.getData()[2], disconnectFlags);
 					}
 				}
+			} else {
+				System.out.println("invalid player handle...");
+				System.exit(-1);
 			}
 			
 			applicationFrame.update(gameState, nonGameState);
@@ -139,6 +149,7 @@ public class VectorWar {
 	}
 
 	private void advanceFrame(int[] inputs, int disconnectFlags) {
+		System.out.println("advancing frame with inputs: " + Arrays.toString(inputs));
 		gameState.update(inputs, disconnectFlags);
 		nonGameState.now.frameNumber = gameState.frameNumber;
 		nonGameState.now.checksum = 0; // TODO: use checksum function using the game state
@@ -194,9 +205,22 @@ public class VectorWar {
 		}
 		
 		@Override
-		public boolean saveGameState() {
-			// TODO Auto-generated method stub
-			return false;
+		public boolean saveGameState(SavedState savedState, int frameCount) {
+			savedState.frames[savedState.head].frame = frameCount;
+			savedState.frames[savedState.head].data = new byte[0];
+			
+//			try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+//	            ObjectOutputStream out;
+//	            out = new ObjectOutputStream(bos);
+//	            out.writeObject(this);
+//	            out.flush();
+//	            savedState.frames[savedState.head].data = bos.toByteArray();
+//	        } catch (IOException e) {
+//	            e.printStackTrace();
+//	        }
+			
+			savedState.head = (savedState.head + 1) % savedState.frames.length;
+			return true;
 		}
 		
 		@Override

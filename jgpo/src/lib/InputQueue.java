@@ -19,14 +19,14 @@ public class InputQueue {
         head = 0;
         tail = 0;
         length = 0;
-        frame_delay = 0;
+        frame_delay = 2;
         first_frame = true;
         last_user_added_frame   = GameInput.NULL_FRAME;
         first_incorrect_frame   = GameInput.NULL_FRAME;
         last_frame_requested    = GameInput.NULL_FRAME;
         last_added_frame        = GameInput.NULL_FRAME;
 
-        prediction = new GameInput(GameInput.NULL_FRAME, 0);
+        prediction = new GameInput(0, GameInput.NULL_FRAME);
         inputs = new GameInput[INPUT_QUEUE_LENGTH];
         for(int i = 0; i < inputs.length; i++) {
             inputs[i] = new GameInput(0,0);
@@ -47,7 +47,7 @@ public class InputQueue {
 	}
 
 	private void addDelayedInputToQueue(GameInput gameInput, int frame_number) {
-		inputs[head] = new GameInput(frame_number, gameInput.getInput());
+		inputs[head] = new GameInput(gameInput.getInput(), frame_number);
 		head = (head + 1) % INPUT_QUEUE_LENGTH;
 		length++;
 		first_frame = false;
@@ -119,13 +119,13 @@ public class InputQueue {
 			} else if(last_added_frame == GameInput.NULL_FRAME) {
 				prediction.setInput(0);
 			} else {
-				prediction = new GameInput(inputs[getPreviousFrame(head)].getFrame(), inputs[getPreviousFrame(head)].getInput());
+				prediction = new GameInput(inputs[getPreviousFrame(head)].getInput(), inputs[getPreviousFrame(head)].getFrame());
 			}
 			
 			prediction.incrementFrame();
 		}
 		
-		GameInput input = new GameInput(prediction.getFrame(), prediction.getInput());
+		GameInput input = new GameInput(prediction.getInput(), prediction.getFrame());
 		input.setFrame(requested_frame);
 		return input;
 	}
@@ -134,7 +134,7 @@ public class InputQueue {
 		return first_incorrect_frame;
 	}
 
-	public void resetPrediction() {
+	public void resetPrediction(int frameCount) {
 		prediction.setFrame(GameInput.NULL_FRAME);
 		first_incorrect_frame = GameInput.NULL_FRAME;
 		last_frame_requested = GameInput.NULL_FRAME;
