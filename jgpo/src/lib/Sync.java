@@ -118,6 +118,10 @@ public class Sync {
 	}
 
 	private void loadFrame(int frame) {
+		if(frame == 0) {
+			System.out.println("load frame zero");
+			System.exit(-1);
+		}
 		if(frameCount == frame) {
 			System.out.println("skipping nop");
 			return;
