@@ -384,7 +384,7 @@ public class UdpPeer implements PollSink {
             }
 
             if(lastReceivedInput.getFrame() < 0) {
-            	lastAckedInput.setFrame(input.startFrame - 1);
+            	lastReceivedInput.setFrame(input.startFrame - 1);
             }
             
             for(int inputValue : inputs) {
