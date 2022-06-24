@@ -64,13 +64,14 @@ public class Sync {
 	        incrementFrame();
 	    }
 	
+	    input.setFrame(frameCount);
 	    inputQueues.get(queuePosition).addInput(new GameInput(input.getInput(), input.getFrame()));
 	    return true;
 	}
 
 	public void incrementFrame() {
-		frameCount++;
 		saveCurrentFrame();
+		frameCount++;
 	}
 
 	public int getFrameCount() {
@@ -123,6 +124,7 @@ public class Sync {
 		}
 		
 		savedState.head = findSavedFrameIndex(frame);
+		sessionCallbacks.loadGameState(savedState.frames[savedState.head]);
 		frameCount = savedState.frames[savedState.head].frame;
 		savedState.head = (savedState.head + 1) % savedState.frames.length;
 	}
@@ -137,6 +139,10 @@ public class Sync {
 		   
 		   if (i == count) {
 		      System.out.println("error index cannot equal array length");
+		      System.out.println("frame: " + frame);
+		      for(i = 0; i < savedState.frames.length; i++) {
+		    	  System.out.println("frame at " + i + " i'th: " + savedState.frames[i].frame);
+		      }
 		      System.exit(-1);
 		   }
 		   return i;

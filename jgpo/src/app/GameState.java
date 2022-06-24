@@ -1,13 +1,13 @@
 package app;
 
 import java.awt.Rectangle;
-import java.util.Arrays;
+import java.io.Serializable;
 
 import app.Ship.Bullet;
 import app.Ship.Position;
 import app.VectorWar.VectorWarInputs;
 
-public class GameState {
+public class GameState implements Serializable {
 	public int frameNumber;
 	
 	private Rectangle arenaBoundary;

@@ -113,11 +113,13 @@ public class P2P extends UdpCallbacks implements JGPOSession {
 			return JGPOErrorCodes.JGPO_INVALID_PLAYER_HANDLE;
 		}
 		
-		GameInput input = new GameInput((int)values, sync.getFrameCount());
+		GameInput input = new GameInput((int)values, GameInput.NULL_FRAME);
 		
 		if(!sync.addLocalInput(queue, input)) {
 			return JGPOErrorCodes.JGPO_PREDICTION_THRESHOLD;
 		}
+		
+		input.setFrame(sync.getFrameCount());
 		
 		if(input.getFrame() != GameInput.NULL_FRAME) {
 			localConnectStatus[queue].lastFrame = input.getFrame();

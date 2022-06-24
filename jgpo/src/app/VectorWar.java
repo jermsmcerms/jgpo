@@ -209,22 +209,22 @@ public class VectorWar {
 			savedState.frames[savedState.head].frame = frameCount;
 			savedState.frames[savedState.head].data = new byte[0];
 			
-//			try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
-//	            ObjectOutputStream out;
-//	            out = new ObjectOutputStream(bos);
-//	            out.writeObject(this);
-//	            out.flush();
-//	            savedState.frames[savedState.head].data = bos.toByteArray();
-//	        } catch (IOException e) {
-//	            e.printStackTrace();
-//	        }
+			try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+	            ObjectOutputStream out;
+	            out = new ObjectOutputStream(bos);
+	            out.writeObject(gameState);
+	            out.flush();
+	            savedState.frames[savedState.head].data = bos.toByteArray();
+	        } catch (IOException e) {
+	            e.printStackTrace();
+	        }
 			
 			savedState.head = (savedState.head + 1) % savedState.frames.length;
 			return true;
 		}
 		
 		@Override
-		public boolean loadGameState() {
+		public boolean loadGameState(SavedFrame loadFrame) {
 			// TODO Auto-generated method stub
 			return false;
 		}

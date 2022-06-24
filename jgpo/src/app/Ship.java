@@ -5,17 +5,18 @@ import java.awt.Graphics2D;
 import java.awt.Polygon;
 import java.awt.Shape;
 import java.awt.geom.GeneralPath;
+import java.io.Serializable;
 
-public class Ship extends AbstractDrawable {
-	public class Position {
+public class Ship extends AbstractDrawable implements Serializable {
+	public class Position implements Serializable {
 		double x, y;
 	}
 	
-	public class Velocity {
+	public class Velocity implements Serializable {
 		double dx, dy;
 	}
 	
-	public class Bullet {
+	public class Bullet implements Serializable {
 		public boolean active;
 		public Position bulletPosition;
 		public Velocity bulletVelocity;
