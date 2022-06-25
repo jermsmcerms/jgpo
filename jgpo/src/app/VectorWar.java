@@ -1,8 +1,10 @@
 package app;
 
 import java.awt.EventQueue;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
@@ -87,7 +89,7 @@ public class VectorWar {
 				if(SYNC_TEST) {
 					local_input = ThreadLocalRandom.current().nextInt();
 				} else {
-					local_input = 1 << 4;//applicationFrame.getInput();
+					local_input = applicationFrame.getInput();
 				}
 				
 				result = api.jgpoAddLocalInput(nonGameState.localPlayerHandle, local_input);
@@ -148,8 +150,7 @@ public class VectorWar {
 		});
 	}
 
-	private void advanceFrame(int[] inputs, int disconnectFlags) {
-		System.out.println("advancing frame with inputs: " + Arrays.toString(inputs));
+	public void advanceFrame(int[] inputs, int disconnectFlags) {
 		gameState.update(inputs, disconnectFlags);
 		nonGameState.now.frameNumber = gameState.frameNumber;
 		nonGameState.now.checksum = 0; // TODO: use checksum function using the game state
@@ -212,21 +213,30 @@ public class VectorWar {
 			try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
 	            ObjectOutputStream out;
 	            out = new ObjectOutputStream(bos);
-	            out.writeObject(gameState);
+	            out.writeObject(VectorWar.this.gameState);
 	            out.flush();
 	            savedState.frames[savedState.head].data = bos.toByteArray();
 	        } catch (IOException e) {
 	            e.printStackTrace();
 	        }
-			
+
 			savedState.head = (savedState.head + 1) % savedState.frames.length;
 			return true;
 		}
 		
 		@Override
 		public boolean loadGameState(SavedFrame loadFrame) {
-			// TODO Auto-generated method stub
-			return false;
+			ByteArrayInputStream in = new ByteArrayInputStream(loadFrame.data);
+			
+	        try {
+	            ObjectInputStream is = new ObjectInputStream(in);
+	            GameState loadedState = (GameState)is.readObject();
+	            
+	            VectorWar.this.gameState = new GameState(loadedState.getShips(), loadedState.frameNumber);
+	        } catch (IOException | ClassNotFoundException e) {
+	            e.printStackTrace();
+	        }
+			return true;
 		}
 		
 		@Override
@@ -237,8 +247,10 @@ public class VectorWar {
 		
 		@Override
 		public boolean advanceFrame(int flags) {
-			// TODO Auto-generated method stub
-			return false;
+			GeneralDataPackage data = api.jgpoSynchronizeInputs();
+			int disconnectFlags = (int)data.getData()[1];
+			VectorWar.this.advanceFrame((int[])data.getData()[2], disconnectFlags);
+			return true;
 		}
 		
 		@Override

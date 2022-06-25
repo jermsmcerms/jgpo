@@ -3,10 +3,14 @@ package app;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Shape;
+import java.io.Serializable;
 
-public abstract class AbstractDrawable implements Drawable {
+public abstract class AbstractDrawable implements Drawable, Serializable {
+	private static final long serialVersionUID = -2689265066428674608L;
 	protected Shape shape;
 	protected Color color;
+	
+	public AbstractDrawable() {}
 	
 	public AbstractDrawable(Shape shape, Color color) {
 		setShape(shape);

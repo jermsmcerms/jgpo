@@ -246,7 +246,11 @@ public class P2P extends UdpCallbacks implements JGPOSession {
 	}
 
 	private int playerHandleToQueue(JGPOPlayerHandle player) {
-		return 0;
+		int offset = player.playerHandle - 1;
+		if(offset < 0 || offset >= numPlayers) {
+			return -1;
+		}
+		return offset;
 	}
 	
 	private JGPOPlayerHandle queueToPlayerHandle(int queue) {

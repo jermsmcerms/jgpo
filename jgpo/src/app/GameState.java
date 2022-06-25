@@ -8,12 +8,17 @@ import app.Ship.Position;
 import app.VectorWar.VectorWarInputs;
 
 public class GameState implements Serializable {
+	private static final long serialVersionUID = 4322457589450291819L;
+
 	public int frameNumber;
 	
 	private Rectangle arenaBoundary;
 	private Ship[] ships;
 	
+	public GameState() {}
+	
 	public GameState(int numShips) {
+		frameNumber = 0;
 		// TODO: change this to values that are proportional and relative to the size of the frame.
 		arenaBoundary = new Rectangle(50, 50, 515, 330);
 		ships = new Ship[numShips];
@@ -21,6 +26,18 @@ public class GameState implements Serializable {
 		initializeShips(numShips);
 	}
 	
+	public GameState(Ship[] ships, int frameNumber) {
+		arenaBoundary = new Rectangle(50, 50, 515, 330);
+		this.frameNumber = frameNumber;
+		this.ships = new Ship[ships.length];
+		for(int i = 0; i < this.ships.length; i++) {
+			Ship ship = ships[i];
+			ship = new Ship();
+			ship.InitializeShip(ships[i]);
+			this.ships[i] = ship;
+		}
+	}
+
 	public Rectangle getBounds() {
 		return arenaBoundary;
 	}

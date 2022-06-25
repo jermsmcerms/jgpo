@@ -8,18 +8,45 @@ import java.awt.geom.GeneralPath;
 import java.io.Serializable;
 
 public class Ship extends AbstractDrawable implements Serializable {
+	private static final long serialVersionUID = 2350374769919795873L;
+
 	public class Position implements Serializable {
+		private static final long serialVersionUID = 4562201584935370379L;
 		double x, y;
+		
+		public Position() {}
+		
+		public Position(double x, double y) {
+			this.x = x;
+			this.y = y;
+		}
 	}
 	
 	public class Velocity implements Serializable {
+		private static final long serialVersionUID = 7030438553376230551L;
 		double dx, dy;
+		
+		public Velocity() {}
+		
+		public Velocity(double dx, double dy) {
+			this.dx = dx;
+			this.dy = dy;
+		}
 	}
 	
 	public class Bullet implements Serializable {
+		private static final long serialVersionUID = -1024579853080748949L;
 		public boolean active;
 		public Position bulletPosition;
 		public Velocity bulletVelocity;
+		
+		public Bullet() {}
+		
+		public Bullet(boolean active, Position bulletPosition, Velocity bulletVelocity) {
+			this.active = active;
+			this.bulletPosition = new Position(bulletPosition.x, bulletPosition.y);
+			this.bulletVelocity = new Velocity(bulletVelocity.dx, bulletVelocity.dy);
+		}
 	}
 	
 	public String connectState;
@@ -103,8 +130,27 @@ public class Ship extends AbstractDrawable implements Serializable {
 		g2d.setColor(new Color(64, 0, 128));
 		for(int i = 0; i < Constants.MAX_BULLETS; i++) {
 			if(bullets[i].active) {
-				g2d.drawRect((int)bullets[i].bulletPosition.x, (int)bullets[i].bulletPosition.y, 2, 2);
+				g2d.drawRect((int)bullets[i].bulletPosition.x, 
+					(int)bullets[i].bulletPosition.y, 2, 2);
 			}
+		}
+	}
+
+	public void InitializeShip(Ship ship) {
+		this.color = ship.color;
+		this.connectState = ship.connectState;
+		this.cooldown = ship.cooldown;
+		this.heading = ship.heading;
+		this.health = ship.health;
+		this.radius = ship.radius;
+		this.shape = ship.getShape();
+		this.shipPosition = new Position(ship.shipPosition.x, ship.shipPosition.y);
+		this.shipVelocity = new Velocity(ship.shipVelocity.dx, ship.shipVelocity.dy);
+		this.bullets = new Bullet[ship.bullets.length];
+		for(int i = 0; i < this.bullets.length; i++) {
+			Bullet currentBullet = ship.bullets[i];
+			this.bullets[i] = new Bullet(currentBullet.active, 
+				currentBullet.bulletPosition, currentBullet.bulletVelocity);
 		}
 	}
 }
