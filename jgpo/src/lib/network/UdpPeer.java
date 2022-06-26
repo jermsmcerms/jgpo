@@ -193,7 +193,10 @@ public class UdpPeer implements PollSink {
 		return eventQueue.remove(0); 
 	}
 	
-	public void setLocalFrameNumber(int frameNumber) {}
+	public void setLocalFrameNumber(int localFrame) {
+		long remoteFrame = lastReceivedInput.getFrame() + (roundTripTime * 60 / 1000);
+		localFrameAdvantage = (int) remoteFrame - localFrame;
+	}
 	
 	public int recommendFrameDelay() { return timeSync.recommendFrameWaitDuration(false); }
 	
