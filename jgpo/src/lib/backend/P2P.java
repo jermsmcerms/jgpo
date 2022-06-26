@@ -170,7 +170,7 @@ public class P2P extends UdpCallbacks implements JGPOSession {
 	                
 	                if(interval > 0) {
 	                	try {
-	                		System.out.println("sleep for " + interval + " frames.");
+	                		//System.out.println("sleep for " + interval + " frames.");
 	                        Thread.sleep(1000L * interval / 60);
 	                    } catch (InterruptedException e) {
 	                        e.printStackTrace();

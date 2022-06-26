@@ -52,7 +52,7 @@ public class TimeSync {
         // sleep for.
         int sleepFrames = (int)(((radvantage - advantage) / 2) + 0.5);
 
-        System.out.printf("iteration %d:  sleep frames is %d\n", count, sleepFrames);
+        //System.out.printf("iteration %d:  sleep frames is %d\n", count, sleepFrames);
 
         // Some things just aren't worth correcting for.  Make sure
         // the difference is relevant before proceeding.

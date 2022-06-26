@@ -402,6 +402,7 @@ public class UdpPeer implements PollSink {
                     lastReceivedInput.setFrame(current_frame);
                     InputEvent event = new InputEvent(UdpPeerEvent.EventType.Input);
                     event.input = new GameInput(lastReceivedInput.getInput(), lastReceivedInput.getFrame());
+                    connectionState.running.last_input_packet_recv_time = System.currentTimeMillis();
                     eventQueue.add(event);
                     //System.out.println("adding input: " + event.input.getInput() + " to frame: " + event.input.getFrame());
                     connectionState.running.last_input_packet_recv_time = System.currentTimeMillis();
