@@ -24,6 +24,8 @@ public class UdpPeer implements PollSink {
 	private static final int MAX_SEQUENCE_DISTANCE = 32768;
 	private static final int SYNC_FIRST_INTERVAL = 500;
 	private static final int SYNC_RETRY_INTERVAL = 2000;
+	private static final int QUALITY_REPORT_INTERVAL = 1000;
+	private static final long RUNNING_RETRY_INTERVAL = 200;
 	// Network transmission information
 	private Udp udp;
 	private SocketAddress peerAddress;
@@ -148,12 +150,14 @@ public class UdpPeer implements PollSink {
 	public void onMessage(UdpMessage message) {
 		boolean messageHandled = false;
 		
-		// TODO : Re-factor so I don't have instantiate this every time I need to process a message
+		// TODO : Re-factor so I don't have instantiate this every time I need to process a message?
 		MessageDispatcher[] messageDispatchTable = new MessageDispatcher[] {
 			new MessageDispatcher() { public boolean dispatch() { return onInvalid(message); }},
 			new MessageDispatcher() { public boolean dispatch() { return onSyncRequest(message); }},
 			new MessageDispatcher() { public boolean dispatch() { return onSyncReply(message); }},
-			new MessageDispatcher() { public boolean dispatch() { return onInput(message); }}
+			new MessageDispatcher() { public boolean dispatch() { return onInput(message); }},
+			new MessageDispatcher() { public boolean dispatch() { return onQualityReport(message); }},
+			new MessageDispatcher() { public boolean dispatch() { return onQualityReply(message); }}
 		};
 		
 		int sequence = message.header.sequenceNumber;
@@ -415,7 +419,7 @@ public class UdpPeer implements PollSink {
 	
 	private boolean onQualityReport(UdpMessage message) { return true; }
 	
-	private boolean onReply(UdpMessage message) { return true; }
+	private boolean onQualityReply(UdpMessage message) { return true; }
 	
 	private boolean onKeepAlive(UdpMessage message) { return true; }
 	
@@ -439,6 +443,27 @@ public class UdpPeer implements PollSink {
 				sendSyncRequest();
 			}
 		}
+		
+		if(currentState == State.Running) {
+			if(connectionState.running.last_quality_report_time == 0 ||
+				connectionState.running.last_quality_report_time + RUNNING_RETRY_INTERVAL < now) {
+				System.out.println("haven't exchanged packets in a while. Resending. " + 
+				"(last received: " + lastReceivedInput.getFrame() + 
+				", last sent: " + lastSentInput.getFrame() + ")");
+				sendPendingOutput();
+				connectionState.running.last_input_packet_recv_time = now;
+			}
+			
+			if(connectionState.running.last_quality_report_time == 0 ||
+				connectionState.running.last_quality_report_time + QUALITY_REPORT_INTERVAL < now) {
+				QualityReport qualityReport = new QualityReport();
+				qualityReport.ping = System.currentTimeMillis();
+				qualityReport.frameAdvantage = (byte)localFrameAdvantage;
+				UdpMessage qualityReportMessage = new UdpMessage(UdpMessageBody.MessageType.QualityReport);
+				
+			}
+		}
+		
 		return true;
 	}
 }

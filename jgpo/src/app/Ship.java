@@ -69,7 +69,7 @@ public class Ship extends AbstractDrawable implements Serializable {
 	
 	public Ship(Shape shape, Color color) {
 		super(shape, color);
-		connectState = "default text";
+		connectState = "";
 	}
 	
 	@Override

@@ -1,22 +1,24 @@
 package app;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.swing.JComponent;
 
 @SuppressWarnings("serial")
 public class Renderer extends JComponent {
-	private List<Drawable> drawables;
+	private CopyOnWriteArrayList<Drawable> drawables;
 	private String status;
 	private RenderingHints rh;
 	
 	public Renderer() {
-		drawables = new ArrayList<>();
+		drawables = new CopyOnWriteArrayList<>();
 		rh = new RenderingHints(RenderingHints.KEY_ANTIALIASING, 
 			RenderingHints.VALUE_ANTIALIAS_ON);
 	        
@@ -59,5 +61,9 @@ public class Renderer extends JComponent {
 
 	public void setStatus(String status) {
 		this.status = status;		
+	}
+
+	public List<Drawable> getDrawables() {
+		return drawables;
 	}
 }

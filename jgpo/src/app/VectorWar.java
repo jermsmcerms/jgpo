@@ -6,11 +6,15 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.text.Utilities;
 
 import api.JgpoNet.JGPOErrorCodes;
 import api.JgpoNet.JGPOPlayerHandle;
@@ -216,10 +220,21 @@ public class VectorWar {
 	            out.writeObject(VectorWar.this.gameState);
 	            out.flush();
 	            savedState.frames[savedState.head].data = bos.toByteArray();
-	        } catch (IOException e) {
+	            MessageDigest md = MessageDigest.getInstance("MD5");
+	            savedState.frames[savedState.head].checksum = bytesToHex(md.digest(savedState.frames[savedState.head].data));
+	        } catch (IOException | NoSuchAlgorithmException e) {
 	            e.printStackTrace();
 	        }
 
+//			System.out.println("saving frame: " + frameCount);
+//			System.out.println("checksum: " + savedState.frames[savedState.head].checksum);
+//			Ship[] ships = gameState.getShips();
+//			for(int i = 0; i < ships.length; i++) {
+//				System.out.println("ship " + (i+1));
+//				System.out.println("position (x: " + ships[i].shipPosition.x + ", y: " + ships[i].shipPosition.y + ")");
+//				System.out.println("velocity (dx: " + ships[i].shipVelocity.dx + ", dy: " + ships[i].shipVelocity.dy + ")");
+//			}
+			
 			savedState.head = (savedState.head + 1) % savedState.frames.length;
 			return true;
 		}
@@ -233,9 +248,20 @@ public class VectorWar {
 	            GameState loadedState = (GameState)is.readObject();
 	            
 	            VectorWar.this.gameState = new GameState(loadedState.getShips(), loadedState.frameNumber);
+	            VectorWar.this.applicationFrame.updateShips(gameState.getShips());
 	        } catch (IOException | ClassNotFoundException e) {
 	            e.printStackTrace();
 	        }
+	        
+//	        System.out.println("saving frame: " + loadFrame.frame);
+//			System.out.println("checksum: " + loadFrame.checksum);
+//			Ship[] ships = gameState.getShips();
+//			for(int i = 0; i < ships.length; i++) {
+//				System.out.println("ship " + (i+1));
+//				System.out.println("position (x: " + ships[i].shipPosition.x + ", y: " + ships[i].shipPosition.y + ")");
+//				System.out.println("velocity (dx: " + ships[i].shipVelocity.dx + ", dy: " + ships[i].shipVelocity.dy + ")");
+//			}
+	        
 			return true;
 		}
 		
@@ -258,6 +284,17 @@ public class VectorWar {
 			event.processEvent(nonGameState);
 			return false;
 		}
+		
+		private final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
+	    public String bytesToHex(byte[] bytes) {
+	        byte[] hexChars = new byte[bytes.length * 2];
+	        for (int j = 0; j < bytes.length; j++) {
+	            int v = bytes[j] & 0xFF;
+	            hexChars[j * 2] = (byte) HEX_ARRAY[v >>> 4];
+	            hexChars[j * 2 + 1] = (byte) HEX_ARRAY[v & 0x0F];
+	        }
+	        return new String(hexChars, StandardCharsets.UTF_8);
+	    }
 	}
 }
 

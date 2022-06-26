@@ -34,4 +34,12 @@ class GameWindow extends JPanel {
 	public Renderer getRenderer() {
 		return renderer;
 	}
+
+	public void updateShips(Ship[] ships) {
+		for(int i = 0; i < this.ships.length; i++) {
+			renderer.remove(this.ships[i]);
+			this.ships[i] = ships[i];
+			renderer.add(this.ships[i]);
+		}
+	}
 }

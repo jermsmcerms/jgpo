@@ -26,13 +26,6 @@ public class Frame extends JFrame {
 	
 	public void update(GameState gs, NonGameState ngs) {
 		Ship[] ships = gs.getShips();
-		/*
-		 * for(int i = 0; i < ships.length; i++) { System.out.println("player "
-		 * + (i+1)); System.out.println("position: (x: " +
-		 * ships[i].shipPosition.x + ", y: " + ships[i].shipPosition.y + ")");
-		 * System.out.println("veclociy: (x: " + ships[i].shipVelocity.dx +
-		 * ", y: " + ships[i].shipVelocity.dy + ")"); }
-		 */
 		
 		PlayerConnectionInfo[] players = ngs.players;
 		
@@ -70,10 +63,8 @@ public class Frame extends JFrame {
 	public void setStatusText(String status) {
 		gameWindow.getRenderer().setStatus(status);
 	}
-
-	public void rebuildWindow(GameState gameState) {
-		remove(gameWindow);
-		gameWindow = new GameWindow(gameState);
-		add(gameWindow);
+	
+	public void updateShips(Ship[] ships) {
+		gameWindow.updateShips(ships);
 	}
 }

@@ -31,10 +31,8 @@ public class GameState implements Serializable {
 		this.frameNumber = frameNumber;
 		this.ships = new Ship[ships.length];
 		for(int i = 0; i < this.ships.length; i++) {
-			Ship ship = ships[i];
-			ship = new Ship();
-			ship.InitializeShip(ships[i]);
-			this.ships[i] = ship;
+			this.ships[i] = new Ship();
+			this.ships[i].InitializeShip(ships[i]);
 		}
 	}
 

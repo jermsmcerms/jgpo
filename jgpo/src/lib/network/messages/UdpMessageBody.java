@@ -20,7 +20,7 @@ public abstract class UdpMessageBody {
 	protected int sizeInBytes;
 	
 	public enum MessageType {
-		Invalid, SyncRequest, SyncReply, Input
+		Invalid, SyncRequest, SyncReply, Input, QualityReport, QualityReply
 	}
 	
 	public int getSizeInBytes() {
