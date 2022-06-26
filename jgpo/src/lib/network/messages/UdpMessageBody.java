@@ -28,4 +28,8 @@ public abstract class UdpMessageBody {
 	}
 	
 	public abstract byte[] constructMessageBody();
+
+	public MessageType getMessageType() {
+		return messageType;
+	}
 }

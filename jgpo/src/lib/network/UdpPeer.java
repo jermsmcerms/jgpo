@@ -148,6 +148,7 @@ public class UdpPeer implements PollSink {
 	public boolean isInitialized() { return udp != null; }		
 
 	public void onMessage(UdpMessage message) {
+//		System.out.println("message type: " + message.messageBody.getMessageType());
 		boolean messageHandled = false;
 		
 		// TODO : Re-factor so I don't have instantiate this every time I need to process a message?
@@ -165,6 +166,7 @@ public class UdpPeer implements PollSink {
 		// TODO: wrap this if in a couple more checks for message type
 		// and magic number validity
 		if(skipped > MAX_SEQUENCE_DISTANCE) {
+			System.out.println("max distance reached. Skipping");
 			return;
 		}
 		
@@ -198,7 +200,10 @@ public class UdpPeer implements PollSink {
 		localFrameAdvantage = (int) remoteFrame - localFrame;
 	}
 	
-	public int recommendFrameDelay() { return timeSync.recommendFrameWaitDuration(false); }
+	public int recommendFrameDelay() {
+		int recommendFrameDelay = timeSync.recommendFrameWaitDuration(false);
+		return recommendFrameDelay;
+	}
 	
 	public void setDisconnectTimeout(int disconnectTimeout) {
 		// TODO Auto-generated method stub
@@ -402,10 +407,11 @@ public class UdpPeer implements PollSink {
                     lastReceivedInput.setFrame(current_frame);
                     InputEvent event = new InputEvent(UdpPeerEvent.EventType.Input);
                     event.input = new GameInput(lastReceivedInput.getInput(), lastReceivedInput.getFrame());
-                    connectionState.running.last_input_packet_recv_time = System.currentTimeMillis();
                     eventQueue.add(event);
                     //System.out.println("adding input: " + event.input.getInput() + " to frame: " + event.input.getFrame());
                     connectionState.running.last_input_packet_recv_time = System.currentTimeMillis();
+                } else {
+                	System.out.println("cannot add input " + inputValue + " frame " + current_frame + " last received frame " + lastReceivedInput.getFrame());
                 }
 
                 current_frame++;
