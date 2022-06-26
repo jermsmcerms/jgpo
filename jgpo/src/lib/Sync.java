@@ -56,7 +56,7 @@ public class Sync {
 		int framesBehind= frameCount - lastConfirmedFrame;
 		if( frameCount>= MAX_PREDICTION_FRAMES &&
 			framesBehind >= MAX_PREDICTION_FRAMES) {
-			System.out.println("rejecting input from emulator: reached prediction barrier");
+			//System.out.println("rejecting input from emulator: reached prediction barrier");
 			return false;
         }
 
@@ -121,6 +121,8 @@ public class Sync {
 		if(frameCount == frame) {
 			System.out.println("skipping nop");
 			return;
+		} else {
+			System.out.println("loading frame: " + frame);
 		}
 		
 		savedState.head = findSavedFrameIndex(frame);
