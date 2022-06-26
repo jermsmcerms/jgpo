@@ -57,6 +57,7 @@ public class Udp implements PollSink {
 				} else {
 					UdpMessage receivedMessage = new UdpMessage(receiveBuffer.array());
 					callbacks.onMsg(fromAddress, receivedMessage);
+					receiveBuffer.clear();
 				}
 			} catch (IOException ex) {
 				ex.printStackTrace();

@@ -12,6 +12,10 @@ public class UdpMessageBodyFactory {
 				return new SyncReply();
 			case Input :
 				return new Input((byte)UdpMessage.UDP_MSG_MAX_PLAYERS);
+			case QualityReport :
+				return new QualityReport();
+			case QualityReply :
+				return new QualityReply();
 			default :
 				return null;
 		}
@@ -27,6 +31,10 @@ public class UdpMessageBodyFactory {
 				return new SyncReply(message);
 			case 3 :
 				return new Input(message);
+			case 4 :
+				return new QualityReport(message);
+			case 5 : 
+				return new QualityReply(message);
 			default :
 				return null;
 		}

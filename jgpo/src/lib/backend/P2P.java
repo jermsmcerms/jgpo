@@ -163,7 +163,8 @@ public class P2P extends UdpCallbacks implements JGPOSession {
 						// need to add quality reports so we can determine how long we
 						// need to sleep.
 						if(peer != null) {
-							interval = Math.max(0, peer.recommendFrameDelay());
+							int recommendFrameDelay = peer.recommendFrameDelay();
+							interval = Math.max(0, recommendFrameDelay);
 						}
 					}
 	                

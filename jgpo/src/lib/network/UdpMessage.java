@@ -84,7 +84,6 @@ public class UdpMessage {
 	  							((message[7] & 0xFF));
 		
 		header.messageType = message[8];
-		
 		messageBody = UdpMessageBodyFactory.makeUdpMessageBody(message);
 	}
 

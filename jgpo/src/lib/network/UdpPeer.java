@@ -39,7 +39,7 @@ public class UdpPeer implements PollSink {
 	private List<UdpQueueEntry> sendQueue;
 	
 	// Network stats
-	private int roundTripTime;
+	private long roundTripTime;
 	private int packetsSent;
 	private int bytesSent;
 	private int kbpsSent;
@@ -195,7 +195,7 @@ public class UdpPeer implements PollSink {
 	
 	public void setLocalFrameNumber(int frameNumber) {}
 	
-	public int recommendFrameDelay() { return 0; }
+	public int recommendFrameDelay() { return timeSync.recommendFrameWaitDuration(false); }
 	
 	public void setDisconnectTimeout(int disconnectTimeout) {
 		// TODO Auto-generated method stub
@@ -417,9 +417,22 @@ public class UdpPeer implements PollSink {
 	
 	private boolean onInputAck(UdpMessage message) { return true; }
 	
-	private boolean onQualityReport(UdpMessage message) { return true; }
+	private boolean onQualityReport(UdpMessage message) { 
+		QualityReport qualityReport = (QualityReport)message.messageBody;
+		QualityReply qualityReply = new QualityReply();
+		qualityReply.pong = qualityReport.ping;
+		UdpMessage qualityReplyMessage = new UdpMessage(UdpMessageBody.MessageType.QualityReply);
+		qualityReplyMessage.messageBody = qualityReply;
+		sendMessage(qualityReplyMessage);
+		remoteFrameAdvantage = qualityReport.frameAdvantage;
+		return true; 
+	}
 	
-	private boolean onQualityReply(UdpMessage message) { return true; }
+	private boolean onQualityReply(UdpMessage message) { 
+		QualityReply qualityReply = (QualityReply)message.messageBody;
+		roundTripTime = qualityReply.pong;
+		return true; 
+	}
 	
 	private boolean onKeepAlive(UdpMessage message) { return true; }
 	
@@ -445,8 +458,8 @@ public class UdpPeer implements PollSink {
 		}
 		
 		if(currentState == State.Running) {
-			if(connectionState.running.last_quality_report_time == 0 ||
-				connectionState.running.last_quality_report_time + RUNNING_RETRY_INTERVAL < now) {
+			if(connectionState.running.last_input_packet_recv_time == 0 ||
+				connectionState.running.last_input_packet_recv_time + RUNNING_RETRY_INTERVAL < now) {
 				System.out.println("haven't exchanged packets in a while. Resending. " + 
 				"(last received: " + lastReceivedInput.getFrame() + 
 				", last sent: " + lastSentInput.getFrame() + ")");
@@ -460,8 +473,12 @@ public class UdpPeer implements PollSink {
 				qualityReport.ping = System.currentTimeMillis();
 				qualityReport.frameAdvantage = (byte)localFrameAdvantage;
 				UdpMessage qualityReportMessage = new UdpMessage(UdpMessageBody.MessageType.QualityReport);
-				
+				qualityReportMessage.messageBody = qualityReport;
+				sendMessage(qualityReportMessage);
+				connectionState.running.last_quality_report_time = now;
 			}
+			
+			// TODO: update network stats for logging and handle disconnects
 		}
 		
 		return true;
